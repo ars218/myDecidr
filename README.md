@@ -5,7 +5,7 @@
 <br/>
 <br/>
 
-[![Open App](https://img.shields.io/badge/Open%20Web%20App-%E2%86%92-6366f1?style=for-the-badge&labelColor=0a0a0f)](https://YOUR-DEPLOYMENT-URL.com)
+[![Open App](https://img.shields.io/badge/Open%20Web%20App-%E2%86%92-6366f1?style=for-the-badge&labelColor=0a0a0f)](https://my-decidr.vercel.app/)
 &nbsp;
 [![Status](https://img.shields.io/badge/Status-Active-22c55e?style=for-the-badge&labelColor=0a0a0f)](#)
 &nbsp;
