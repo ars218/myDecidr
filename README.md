@@ -19,6 +19,10 @@
 
 ---
 
+> [!NOTE]
+> After opening the web app, you can use the "Add to Home Screen" or "Install as an app" option to access myDecidr anytime from your home screen.
+
+---
 ## Overview
 
 Most people forget why they made a decision within weeks. Decidr fixes that.
@@ -26,6 +30,10 @@ Most people forget why they made a decision within weeks. Decidr fixes that.
 It's a personal decision journal — log what you decided, why you decided it, and how confident you felt. Then come back later and record what actually happened. Over time, you build a clear picture of how you think and where your judgment is strong or weak.
 
 No accounts. No cloud. No tracking. Everything lives on your device.
+---
+
+> [!WARNING]
+> myDecidr uses localstorage and your saved Decisions remain on your device/web browser.
 
 ---
 
