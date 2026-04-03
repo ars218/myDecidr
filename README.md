@@ -126,6 +126,6 @@ Private repository. Not licensed for public use or redistribution.
 
 <div align="center">
 
-[Open Decidr →](https://YOUR-DEPLOYMENT-URL.com)
+[Open Decidr →](https://my-decidr.vercel.app/)
 
 </div>
