@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="logo.ico" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a0f">
@@ -26,6 +25,8 @@
     --accent-glow: rgba(99,102,241,0.35);
     --accent-soft: rgba(99,102,241,0.12);
     --warm-shadow: rgba(99,102,241,0.08);
+    --orb-r: 79; --orb-g: 70; --orb-b: 229;
+    --orb-r2: 99; --orb-g2: 102; --orb-b2: 241;
     --serif: 'Cormorant Garamond', serif;
     --sans: 'Outfit', sans-serif;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -44,564 +45,259 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Background orb */
-  body::before {
-    content: '';
+  /* Orb canvas — animated by rAF, no CSS transition so no jitter */
+  #orb-canvas {
     position: fixed;
-    top: -20vh;
-    left: 50%;
+    top: -20vh; left: 50%;
     transform: translateX(-50%);
-    width: 80vw;
-    height: 80vw;
-    background: radial-gradient(ellipse at center,
-      rgba(79,70,229,0.18) 0%,
-      rgba(99,102,241,0.08) 40%,
-      transparent 70%);
+    width: 80vw; height: 80vw;
     border-radius: 50%;
     pointer-events: none;
     z-index: 0;
     animation: orbPulse 8s ease-in-out infinite;
+    will-change: background;
   }
-
   @keyframes orbPulse {
-    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
-    50% { transform: translateX(-50%) scale(1.08); opacity: 1; }
+    0%,100% { transform: translateX(-50%) scale(1);    opacity: .7; }
+    50%      { transform: translateX(-50%) scale(1.08); opacity: 1;  }
   }
 
-  /* App shell */
-  #app {
+  /* Ripple flash on theme change */
+  #orb-ripple {
     position: fixed;
-    inset: 0;
-    overflow: hidden;
-    z-index: 1;
+    top: -20vh; left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 80vw; height: 80vw;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+  }
+  #orb-ripple.pop {
+    animation: rippleOut 700ms cubic-bezier(0.2,0,0.4,1) forwards;
+  }
+  @keyframes rippleOut {
+    0%   { transform: translateX(-50%) scale(0.5);  opacity: .65; }
+    60%  { transform: translateX(-50%) scale(1.7);  opacity: .15; }
+    100% { transform: translateX(-50%) scale(2.4);  opacity: 0;   }
   }
 
-  /* Views */
+  #app { position: fixed; inset: 0; overflow: hidden; z-index: 1; }
+
   .view {
-    position: absolute;
-    inset: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    position: absolute; inset: 0;
+    overflow-y: auto; overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     padding-bottom: calc(80px + var(--safe-bottom));
-    opacity: 0;
-    transform: translateY(12px);
+    opacity: 0; transform: translateY(12px);
     pointer-events: none;
     transition: opacity 350ms var(--ease), transform 350ms var(--ease);
   }
-  .view.active {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: all;
-  }
-  .view.exit {
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-  }
+  .view.active { opacity: 1; transform: translateY(0); pointer-events: all; }
 
   /* Header */
-  .header {
-    padding: 56px 24px 24px;
-    position: relative;
-  }
-  .header-eyebrow {
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-  .header-title {
-    font-family: var(--serif);
-    font-size: 36px;
-    font-weight: 300;
-    letter-spacing: -0.01em;
-    line-height: 1.1;
-    color: var(--text);
-  }
-  .header-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 8px;
-    font-weight: 300;
-    line-height: 1.5;
-  }
+  .header { padding: 56px 24px 24px; }
+  .header-eyebrow { font-size:10px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; transition: color 700ms var(--ease); }
+  .header-title { font-family:var(--serif); font-size:36px; font-weight:300; letter-spacing:-.01em; line-height:1.1; }
+  .header-sub { font-size:13px; color:var(--text-muted); margin-top:8px; font-weight:300; line-height:1.5; }
 
   /* Cards */
   .card {
     margin: 0 16px 12px;
     background: var(--surface);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow:
-      0 2px 8px var(--warm-shadow),
-      0 0 0 1px rgba(255,255,255,0.04);
-    cursor: pointer;
-    transition: transform 200ms var(--ease), box-shadow 200ms var(--ease);
-    position: relative;
-    overflow: hidden;
-  }
-  .card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 200ms var(--ease);
+    border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 2px 8px var(--warm-shadow), 0 0 0 1px rgba(255,255,255,.04);
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: transform 200ms var(--ease);
   }
   .card:active { transform: scale(0.98); }
-  .card:active::before { opacity: 1; }
+  .card-category { font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; transition: color 700ms var(--ease); }
+  .card-title { font-family:var(--serif); font-size:20px; font-weight:400; line-height:1.25; margin-bottom:8px; }
+  .card-meta { font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:12px; margin-top:12px; }
 
-  .card-category {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-  .card-title {
-    font-family: var(--serif);
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 1.25;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-  .card-meta {
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-  }
-  .confidence-dots {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  .confidence-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--text-dim);
-  }
-  .confidence-dot.active { background: var(--accent); }
+  .confidence-dots { display:flex; gap:4px; align-items:center; }
+  .confidence-dot { width:5px; height:5px; border-radius:50%; background:var(--text-dim); }
+  .confidence-dot.active { background:var(--accent); transition: background 700ms var(--ease); }
 
-  /* Review badge */
   .review-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    background: rgba(99,102,241,0.15);
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 400;
-    color: #a5b4fc;
-    box-shadow: 0 0 12px rgba(99,102,241,0.2);
+    display:inline-flex; align-items:center; gap:5px;
+    padding:4px 10px; border-radius:20px;
+    font-size:11px; color:var(--accent);
+    background: var(--accent-soft);
     animation: badgePulse 3s ease-in-out infinite;
+    transition: color 700ms var(--ease), background 700ms var(--ease);
   }
-  .review-badge::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #a5b4fc;
-    box-shadow: 0 0 6px #a5b4fc;
-  }
+  .review-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); box-shadow: 0 0 6px var(--accent); transition: background 700ms var(--ease); }
   @keyframes badgePulse {
-    0%, 100% { box-shadow: 0 0 8px rgba(99,102,241,0.2); }
-    50% { box-shadow: 0 0 16px rgba(99,102,241,0.35); }
+    0%,100% { box-shadow: 0 0 8px  var(--accent-soft); }
+    50%      { box-shadow: 0 0 16px var(--accent-glow); }
   }
 
-  /* Category filter */
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    padding: 0 16px 20px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-row { display:flex; gap:8px; padding:0 16px 20px; overflow-x:auto; scrollbar-width:none; }
+  .filter-row::-webkit-scrollbar { display:none; }
   .filter-chip {
-    flex-shrink: 0;
-    padding: 7px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 400;
-    font-family: var(--sans);
-    cursor: pointer;
+    flex-shrink:0; padding:7px 14px; border-radius:20px;
+    font-size:12px; font-family:var(--sans); cursor:pointer;
+    border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text-muted);
     transition: all 200ms var(--ease);
-    border: 1px solid rgba(255,255,255,0.08);
-    background: transparent;
-    color: var(--text-muted);
   }
-  .filter-chip.active {
-    background: var(--accent-soft);
-    border-color: rgba(99,102,241,0.4);
-    color: var(--text);
-  }
+  .filter-chip.active { background:var(--accent-soft); border-color:var(--accent); color:var(--text); transition: all 200ms var(--ease), background 700ms var(--ease), border-color 700ms var(--ease); }
 
   /* Bottom nav */
   .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0; right: 0;
+    position:fixed; bottom:0; left:0; right:0;
     height: calc(64px + var(--safe-bottom));
-    background: rgba(10,10,15,0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255,255,255,0.05);
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-around;
-    padding-top: 8px;
-    z-index: 100;
+    background: rgba(10,10,15,.92);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,.05);
+    display:flex; align-items:flex-start; justify-content:space-around;
+    padding-top:8px; z-index:100;
   }
   .nav-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 20px;
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.08em;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:8px 14px; cursor:pointer; background:none; border:none;
+    color:var(--text-dim); font-family:var(--sans); font-size:10px; font-weight:400; letter-spacing:.08em;
     transition: color 250ms var(--ease);
   }
-  .nav-btn.active { color: var(--accent); }
+  .nav-btn.active { color:var(--accent); transition: color 250ms var(--ease), color 700ms var(--ease); }
   .nav-btn svg { transition: transform 200ms var(--ease); }
-  .nav-btn:active svg { transform: scale(0.88); }
+  .nav-btn:active svg { transform: scale(.88); }
 
-  /* FAB */
   .fab {
-    position: fixed;
-    bottom: calc(76px + var(--safe-bottom));
-    right: 20px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px var(--accent-glow);
-    z-index: 99;
+    position:fixed; bottom:calc(76px + var(--safe-bottom)); right:20px;
+    width:52px; height:52px; border-radius:50%;
+    background:var(--accent); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 20px var(--accent-glow); z-index:99;
     transition: transform 200ms var(--ease), box-shadow 200ms var(--ease);
   }
-  .fab:active { transform: scale(0.92); box-shadow: 0 2px 10px var(--accent-glow); }
+  .fab:active { transform:scale(.92); }
 
-  /* Form / Create view */
-  .form-wrap { padding: 0 24px 32px; }
+  /* Form */
+  .form-wrap { padding:0 24px 32px; }
+  .step-indicator { display:flex; gap:6px; padding:20px 24px 0; }
+  .step-dot { height:2px; flex:1; border-radius:2px; background:var(--text-dim); transition:background 400ms var(--ease); }
+  .step-dot.done  { background:var(--accent); }
+  .step-dot.active{ background:var(--accent); opacity:.5; }
 
-  .step-indicator {
-    display: flex;
-    gap: 6px;
-    padding: 20px 24px 0;
-  }
-  .step-dot {
-    height: 2px;
-    flex: 1;
-    border-radius: 2px;
-    background: var(--text-dim);
-    transition: background 400ms var(--ease);
-  }
-  .step-dot.done { background: var(--accent); }
-  .step-dot.active { background: rgba(99,102,241,0.6); }
+  .form-step { display:none; animation: stepIn 350ms var(--ease) both; }
+  .form-step.active { display:block; }
+  @keyframes stepIn { from{opacity:0;transform:translateX(16px);} to{opacity:1;transform:translateX(0);} }
 
-  .form-step {
-    display: none;
-    animation: stepIn 350ms var(--ease) both;
-  }
-  .form-step.active { display: block; }
-  @keyframes stepIn {
-    from { opacity: 0; transform: translateX(16px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .field {
-    margin-bottom: 32px;
-  }
-  .field-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    display: block;
-  }
+  .field { margin-bottom:32px; }
+  .field-label { font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; display:block; }
   .field-input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--text-dim);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 15px;
-    font-weight: 300;
-    padding: 8px 0;
-    outline: none;
-    transition: border-color 300ms var(--ease);
-    caret-color: var(--accent);
+    width:100%; background:transparent; border:none; border-bottom:1px solid var(--text-dim);
+    color:var(--text); font-family:var(--sans); font-size:15px; font-weight:300;
+    padding:8px 0; outline:none; transition:border-color 300ms var(--ease); caret-color:var(--accent);
   }
-  .field-input::placeholder { color: var(--text-dim); }
-  .field-input:focus {
-    border-image: linear-gradient(90deg, var(--accent), transparent) 1;
-    border-color: var(--accent);
-  }
-  textarea.field-input {
-    resize: none;
-    min-height: 80px;
-    line-height: 1.6;
-  }
+  .field-input::placeholder { color:var(--text-dim); }
+  .field-input:focus { border-color:var(--accent); }
+  textarea.field-input { resize:none; min-height:80px; line-height:1.6; }
 
-  /* Segmented control */
-  .seg-control {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .seg-control { display:flex; gap:8px; flex-wrap:wrap; }
   .seg-opt {
-    padding: 9px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 300;
-    cursor: pointer;
-    transition: all 200ms var(--ease);
+    padding:9px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.08);
+    background:transparent; color:var(--text-muted); font-family:var(--sans); font-size:13px; font-weight:300;
+    cursor:pointer; transition:all 200ms var(--ease);
   }
-  .seg-opt.selected {
-    background: var(--accent-soft);
-    border-color: rgba(99,102,241,0.5);
-    color: var(--text);
-  }
+  .seg-opt.selected { background:var(--accent-soft); border-color:var(--accent); color:var(--text); }
 
-  /* Buttons */
   .btn-primary {
-    width: 100%;
-    padding: 16px;
-    background: var(--accent);
-    border: none;
-    border-radius: 14px;
-    color: white;
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 200ms var(--ease);
-    box-shadow: 0 4px 16px var(--accent-glow);
-    margin-top: 8px;
+    width:100%; padding:16px; background:var(--accent); border:none; border-radius:14px;
+    color:white; font-family:var(--sans); font-size:14px; font-weight:500; letter-spacing:.05em;
+    cursor:pointer; box-shadow:0 4px 16px var(--accent-glow); margin-top:8px;
+    transition: transform 200ms var(--ease), background 700ms var(--ease), box-shadow 700ms var(--ease);
   }
-  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:active { transform:scale(.97); }
   .btn-ghost {
-    width: 100%;
-    padding: 14px;
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    color: var(--text-muted);
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 300;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: all 200ms var(--ease);
+    width:100%; padding:14px; background:transparent; border:1px solid rgba(255,255,255,.08);
+    border-radius:14px; color:var(--text-muted); font-family:var(--sans); font-size:14px; font-weight:300;
+    cursor:pointer; margin-top:10px; transition:all 200ms var(--ease);
   }
-  .btn-ghost:active { background: rgba(255,255,255,0.04); }
+  .btn-ghost:active { background:rgba(255,255,255,.04); }
 
-  /* Detail view */
-  .detail-header {
-    padding: 56px 24px 28px;
-  }
-  .back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-family: var(--sans);
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 24px;
-  }
+  /* Detail */
+  .detail-header { padding:56px 24px 28px; }
+  .back-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text-muted); font-family:var(--sans); font-size:13px; cursor:pointer; padding:0; margin-bottom:24px; }
+  .detail-section { padding:0 24px; margin-bottom:28px; }
+  .detail-section-label { font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; transition: color 700ms var(--ease); }
+  .detail-section-content { font-size:15px; font-weight:300; color:var(--text); line-height:1.65; }
+  .detail-section-content.serif { font-family:var(--serif); font-size:18px; font-weight:400; }
 
-  .detail-section {
-    padding: 0 24px;
-    margin-bottom: 28px;
-  }
-  .detail-section-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-  .detail-section-content {
-    font-size: 15px;
-    font-weight: 300;
-    color: var(--text);
-    line-height: 1.65;
-  }
-  .detail-section-content.serif {
-    font-family: var(--serif);
-    font-size: 18px;
-    font-weight: 400;
-  }
+  .review-card { margin:0 16px 12px; background:var(--surface2); border-radius:var(--radius); padding:18px; border:1px solid rgba(255,255,255,.06); }
+  .review-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .review-rating { font-family:var(--serif); font-size:16px; font-style:italic; color:var(--accent); transition: color 700ms var(--ease); }
+  .review-date { font-size:11px; color:var(--text-dim); }
 
-  .review-card {
-    margin: 0 16px 12px;
-    background: var(--surface2);
-    border-radius: var(--radius);
-    padding: 18px;
-    border: 1px solid rgba(99,102,241,0.12);
-  }
-  .review-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  .review-rating {
-    font-family: var(--serif);
-    font-size: 16px;
-    font-style: italic;
-    color: var(--accent);
-  }
-  .review-date {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
+  .empty-state { display:flex; flex-direction:column; align-items:center; padding:60px 32px 32px; text-align:center; gap:16px; }
+  .empty-icon { width:64px; height:64px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; margin-bottom:8px; transition: background 700ms var(--ease); }
+  .empty-title { font-family:var(--serif); font-size:24px; font-weight:300; }
+  .empty-sub { font-size:13px; color:var(--text-muted); line-height:1.6; }
 
-  /* Empty state */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 60px 32px 32px;
-    text-align: center;
-    gap: 16px;
-  }
-  .empty-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--accent-soft);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-  }
-  .empty-title {
-    font-family: var(--serif);
-    font-size: 24px;
-    font-weight: 300;
-    color: var(--text);
-  }
-  .empty-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
+  .spacer { height:20px; }
+  .section-title { font-family:var(--serif); font-size:13px; color:var(--text-muted); padding:0 24px 12px; letter-spacing:.04em; }
+  .insight-row { display:flex; gap:10px; padding:0 16px 16px; }
+  .insight-tile { flex:1; background:var(--surface); border-radius:14px; padding:16px; box-shadow:0 2px 8px var(--warm-shadow),0 0 0 1px rgba(255,255,255,.04); }
+  .insight-num { font-family:var(--serif); font-size:32px; font-weight:300; line-height:1; margin-bottom:4px; }
+  .insight-label { font-size:11px; color:var(--text-muted); }
 
-  /* Divider spacing */
-  .spacer { height: 20px; }
-  .section-title {
-    font-family: var(--serif);
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--text-muted);
-    padding: 0 24px 12px;
-    letter-spacing: 0.04em;
+  /* ── CUSTOMIZATION ── */
+  .custom-wrap { padding:0 20px 32px; }
+  .custom-label { font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--text-muted); margin-bottom:18px; display:block; }
+  .theme-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .theme-card {
+    border-radius:18px; padding:18px 16px;
+    border:1px solid rgba(255,255,255,.06);
+    background:var(--surface);
+    cursor:pointer; position:relative; overflow:hidden;
+    transition: border-color 300ms var(--ease), transform 200ms var(--ease);
   }
+  .theme-card:active { transform:scale(.95); }
+  .theme-card.selected { border-color:rgba(255,255,255,.22); }
+  .theme-orb {
+    width:50px; height:50px; border-radius:50%; margin-bottom:12px;
+    transition: box-shadow 600ms var(--ease);
+  }
+  .theme-card.selected .theme-orb { /* glow added inline */ }
+  .theme-name { font-size:13px; font-weight:400; color:var(--text); }
+  .theme-tick {
+    position:absolute; top:10px; right:10px;
+    width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.9);
+    display:none; align-items:center; justify-content:center;
+  }
+  .theme-card.selected .theme-tick { display:flex; }
 
-  /* Toast */
   .toast {
-    position: fixed;
-    bottom: calc(80px + var(--safe-bottom) + 12px);
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: var(--surface2);
-    color: var(--text);
-    padding: 12px 20px;
-    border-radius: 24px;
-    font-size: 13px;
-    font-weight: 300;
-    white-space: nowrap;
-    z-index: 200;
-    opacity: 0;
-    transition: all 300ms var(--ease);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
-    pointer-events: none;
+    position:fixed; bottom:calc(80px + var(--safe-bottom) + 12px); left:50%;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--surface2); color:var(--text);
+    padding:12px 20px; border-radius:24px; font-size:13px; font-weight:300;
+    white-space:nowrap; z-index:200; opacity:0;
+    transition:all 300ms var(--ease); pointer-events:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06);
   }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* Insights */
-  .insight-row {
-    display: flex;
-    gap: 10px;
-    padding: 0 16px 16px;
-  }
-  .insight-tile {
-    flex: 1;
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 2px 8px var(--warm-shadow), 0 0 0 1px rgba(255,255,255,0.04);
-  }
-  .insight-num {
-    font-family: var(--serif);
-    font-size: 32px;
-    font-weight: 300;
-    color: var(--text);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .insight-label {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  /* Scrollbar hide */
-  ::-webkit-scrollbar { display: none; }
-  * { scrollbar-width: none; }
+  ::-webkit-scrollbar { display:none; }
+  * { scrollbar-width:none; }
 </style>
 </head>
 <body>
+
+<div id="orb-canvas"></div>
+<div id="orb-ripple"></div>
+
 <div id="app">
 
-  <!-- LIST VIEW -->
+  <!-- LIST -->
   <div class="view active" id="view-list">
     <div class="header">
       <div class="header-eyebrow">myDecidr</div>
       <h1 class="header-title">Your<br><em>decisions</em></h1>
       <p class="header-sub" id="list-sub">Loading…</p>
     </div>
-
-    <div class="filter-row" id="filter-row">
+    <div class="filter-row">
       <button class="filter-chip active" data-cat="All" onclick="setFilter('All')">All</button>
       <button class="filter-chip" data-cat="Career" onclick="setFilter('Career')">Career</button>
       <button class="filter-chip" data-cat="Finance" onclick="setFilter('Finance')">Finance</button>
@@ -610,11 +306,10 @@
       <button class="filter-chip" data-cat="Personal" onclick="setFilter('Personal')">Personal</button>
       <button class="filter-chip" data-cat="Other" onclick="setFilter('Other')">Other</button>
     </div>
-
     <div id="list-container"></div>
   </div>
 
-  <!-- INSIGHTS VIEW -->
+  <!-- INSIGHTS -->
   <div class="view" id="view-insights">
     <div class="header">
       <div class="header-eyebrow">Reflections</div>
@@ -623,7 +318,20 @@
     <div id="insights-content"></div>
   </div>
 
-  <!-- CREATE VIEW -->
+  <!-- CUSTOMIZE -->
+  <div class="view" id="view-customize">
+    <div class="header">
+      <div class="header-eyebrow">myDecidr</div>
+      <h1 class="header-title">Make it<br><em>yours</em></h1>
+      <p class="header-sub">Pick your orb color. The change is instant and saved.</p>
+    </div>
+    <div class="custom-wrap">
+      <span class="custom-label">Orb Theme</span>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+  </div>
+
+  <!-- CREATE -->
   <div class="view" id="view-create">
     <div class="header">
       <button class="back-btn" onclick="cancelCreate()">
@@ -633,24 +341,18 @@
       <div class="header-eyebrow">New Entry</div>
       <h1 class="header-title">Record this<br><em>decision</em></h1>
     </div>
-
-    <div class="step-indicator" id="step-indicator">
+    <div class="step-indicator">
       <div class="step-dot active" id="sd-0"></div>
       <div class="step-dot" id="sd-1"></div>
       <div class="step-dot" id="sd-2"></div>
     </div>
-
     <div class="form-wrap">
-      <!-- Step 1: The Decision -->
       <div class="form-step active" id="step-0">
         <div class="spacer"></div>
-        <div class="field">
-          <label class="field-label">The decision</label>
-          <input class="field-input" id="f-title" type="text" placeholder="What did you decide?" autocomplete="off">
-        </div>
+        <div class="field"><label class="field-label">The decision</label><input class="field-input" id="f-title" type="text" placeholder="What did you decide?" autocomplete="off"></div>
         <div class="field">
           <label class="field-label">Category</label>
-          <div class="seg-control" id="f-category-ctrl">
+          <div class="seg-control">
             <button class="seg-opt" data-val="Career" onclick="selectSeg('f-category',this)">Career</button>
             <button class="seg-opt" data-val="Finance" onclick="selectSeg('f-category',this)">Finance</button>
             <button class="seg-opt" data-val="Relationships" onclick="selectSeg('f-category',this)">Relationships</button>
@@ -660,28 +362,14 @@
           </div>
           <input type="hidden" id="f-category">
         </div>
-        <div class="field">
-          <label class="field-label">The situation</label>
-          <textarea class="field-input" id="f-situation" placeholder="What was happening? What brought you here?"></textarea>
-        </div>
-        <div class="field">
-          <label class="field-label">Options you considered</label>
-          <textarea class="field-input" id="f-options" placeholder="What other paths did you see?"></textarea>
-        </div>
-        <div class="field">
-          <label class="field-label">What you chose</label>
-          <input class="field-input" id="f-chosen" type="text" placeholder="The choice you made">
-        </div>
+        <div class="field"><label class="field-label">The situation</label><textarea class="field-input" id="f-situation" placeholder="What was happening?"></textarea></div>
+        <div class="field"><label class="field-label">Options considered</label><textarea class="field-input" id="f-options" placeholder="What other paths did you see?"></textarea></div>
+        <div class="field"><label class="field-label">What you chose</label><input class="field-input" id="f-chosen" type="text" placeholder="The choice you made"></div>
         <button class="btn-primary" onclick="nextStep(1)">Continue →</button>
       </div>
-
-      <!-- Step 2: Reasoning -->
       <div class="form-step" id="step-1">
         <div class="spacer"></div>
-        <div class="field">
-          <label class="field-label">Your reasoning</label>
-          <textarea class="field-input" id="f-reasoning" placeholder="Why did this option make sense? What values or beliefs guided this?"></textarea>
-        </div>
+        <div class="field"><label class="field-label">Your reasoning</label><textarea class="field-input" id="f-reasoning" placeholder="Why did this option make sense?"></textarea></div>
         <div class="field">
           <label class="field-label">Confidence</label>
           <div class="seg-control">
@@ -694,21 +382,16 @@
         <button class="btn-primary" onclick="nextStep(2)">Continue →</button>
         <button class="btn-ghost" onclick="nextStep(0)">← Back</button>
       </div>
-
-      <!-- Step 3: Expected outcome -->
       <div class="form-step" id="step-2">
         <div class="spacer"></div>
-        <div class="field">
-          <label class="field-label">Expected outcome</label>
-          <textarea class="field-input" id="f-expected" placeholder="What do you hope or expect will happen? Be specific — this is what you'll compare against later."></textarea>
-        </div>
+        <div class="field"><label class="field-label">Expected outcome</label><textarea class="field-input" id="f-expected" placeholder="What do you hope will happen? Be specific."></textarea></div>
         <button class="btn-primary" onclick="saveDecision()">Save Decision</button>
         <button class="btn-ghost" onclick="nextStep(1)">← Back</button>
       </div>
     </div>
   </div>
 
-  <!-- DETAIL VIEW -->
+  <!-- DETAIL -->
   <div class="view" id="view-detail">
     <div class="detail-header">
       <button class="back-btn" onclick="showView('list')">
@@ -718,45 +401,20 @@
       <div class="header-eyebrow" id="d-category"></div>
       <h1 class="header-title" id="d-title" style="font-size:30px"></h1>
     </div>
-
-    <div class="detail-section">
-      <div class="detail-section-label">Date recorded</div>
-      <div class="detail-section-content" id="d-date"></div>
-    </div>
-    <div class="detail-section">
-      <div class="detail-section-label">Confidence</div>
-      <div id="d-confidence-dots" class="confidence-dots" style="padding:4px 0"></div>
-    </div>
-    <div class="detail-section" id="d-section-situation">
-      <div class="detail-section-label">The situation</div>
-      <div class="detail-section-content" id="d-situation"></div>
-    </div>
-    <div class="detail-section" id="d-section-options">
-      <div class="detail-section-label">Options considered</div>
-      <div class="detail-section-content" id="d-options"></div>
-    </div>
-    <div class="detail-section">
-      <div class="detail-section-label">The choice</div>
-      <div class="detail-section-content serif" id="d-chosen"></div>
-    </div>
-    <div class="detail-section">
-      <div class="detail-section-label">Reasoning</div>
-      <div class="detail-section-content" id="d-reasoning"></div>
-    </div>
-    <div class="detail-section">
-      <div class="detail-section-label">Expected outcome</div>
-      <div class="detail-section-content" id="d-expected"></div>
-    </div>
-
+    <div class="detail-section"><div class="detail-section-label">Date recorded</div><div class="detail-section-content" id="d-date"></div></div>
+    <div class="detail-section"><div class="detail-section-label">Confidence</div><div id="d-confidence-dots" class="confidence-dots" style="padding:4px 0"></div></div>
+    <div class="detail-section"><div class="detail-section-label">The situation</div><div class="detail-section-content" id="d-situation"></div></div>
+    <div class="detail-section"><div class="detail-section-label">Options considered</div><div class="detail-section-content" id="d-options"></div></div>
+    <div class="detail-section"><div class="detail-section-label">The choice</div><div class="detail-section-content serif" id="d-chosen"></div></div>
+    <div class="detail-section"><div class="detail-section-label">Reasoning</div><div class="detail-section-content" id="d-reasoning"></div></div>
+    <div class="detail-section"><div class="detail-section-label">Expected outcome</div><div class="detail-section-content" id="d-expected"></div></div>
     <div class="spacer"></div>
     <div class="section-title" id="reviews-heading">Reviews</div>
     <div id="reviews-container"></div>
-    <div style="padding: 8px 16px 16px">
-      <button class="btn-primary" onclick="openAddReview()" id="add-review-btn">Add Review</button>
-    </div>
+    <div style="padding:8px 16px 16px"><button class="btn-primary" onclick="openAddReview()">Add Review</button></div>
   </div>
 
-  <!-- ADD REVIEW VIEW -->
+  <!-- REVIEW -->
   <div class="view" id="view-review">
     <div class="detail-header">
       <button class="back-btn" onclick="showView('detail')">
@@ -778,21 +436,14 @@
         </div>
         <input type="hidden" id="r-rating">
       </div>
-      <div class="field">
-        <label class="field-label">What happened</label>
-        <textarea class="field-input" id="r-outcome" placeholder="Describe the actual outcome…"></textarea>
-      </div>
-      <div class="field">
-        <label class="field-label">Lesson learned</label>
-        <textarea class="field-input" id="r-learned" placeholder="What would you tell your past self?"></textarea>
-      </div>
+      <div class="field"><label class="field-label">What happened</label><textarea class="field-input" id="r-outcome" placeholder="Describe the actual outcome…"></textarea></div>
+      <div class="field"><label class="field-label">Lesson learned</label><textarea class="field-input" id="r-learned" placeholder="What would you tell your past self?"></textarea></div>
       <button class="btn-primary" onclick="saveReview()">Save Review</button>
     </div>
   </div>
 
 </div>
 
-<!-- Bottom Navigation -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="nav-list" onclick="navTo('list')">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="11" y2="16"/></svg>
@@ -802,410 +453,269 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
     Patterns
   </button>
+  <button class="nav-btn" id="nav-customize" onclick="navTo('customize')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+    Theme
+  </button>
 </nav>
 
-<!-- FAB -->
 <button class="fab" onclick="showCreate()" id="fab-btn">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// ─── THEMES ──────────────────────────────────────────────────────────────────
+const THEMES = [
+  { id:'blue',   name:'Blue Orb',   c1:[79,70,229],   c2:[99,102,241],  accent:'#6366f1', glow:'rgba(99,102,241,0.35)',  soft:'rgba(99,102,241,0.12)',  shadow:'rgba(99,102,241,0.08)' },
+  { id:'green',  name:'Green Orb',  c1:[22,163,74],   c2:[34,197,94],   accent:'#22c55e', glow:'rgba(34,197,94,0.35)',   soft:'rgba(34,197,94,0.12)',   shadow:'rgba(34,197,94,0.08)' },
+  { id:'red',    name:'Red Orb',    c1:[185,28,28],   c2:[239,68,68],   accent:'#ef4444', glow:'rgba(239,68,68,0.35)',   soft:'rgba(239,68,68,0.12)',   shadow:'rgba(239,68,68,0.08)' },
+  { id:'orange', name:'Orange Orb', c1:[194,65,12],   c2:[249,115,22],  accent:'#f97316', glow:'rgba(249,115,22,0.35)',  soft:'rgba(249,115,22,0.12)',  shadow:'rgba(249,115,22,0.08)' },
+  { id:'pink',   name:'Pink Orb',   c1:[190,24,93],   c2:[236,72,153],  accent:'#ec4899', glow:'rgba(236,72,153,0.35)', soft:'rgba(236,72,153,0.12)', shadow:'rgba(236,72,153,0.08)' },
+  { id:'purple', name:'Purple Orb', c1:[109,40,217],  c2:[139,92,246],  accent:'#8b5cf6', glow:'rgba(139,92,246,0.35)',  soft:'rgba(139,92,246,0.12)',  shadow:'rgba(139,92,246,0.08)' },
+  { id:'white',  name:'White Orb',  c1:[180,180,200], c2:[220,220,240], accent:'#c8c8e0', glow:'rgba(220,220,240,0.25)', soft:'rgba(220,220,240,0.10)', shadow:'rgba(220,220,240,0.06)' },
+  { id:'cyan',   name:'Cyan Orb',   c1:[14,116,144],  c2:[6,182,212],   accent:'#06b6d4', glow:'rgba(6,182,212,0.35)',   soft:'rgba(6,182,212,0.12)',   shadow:'rgba(6,182,212,0.08)' },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
 let decisions = [];
 let currentFilter = 'All';
 let currentDecisionId = null;
 let currentStep = 0;
+let currentThemeId = localStorage.getItem('decidr_theme') || 'blue';
 
-// ─── STORAGE ─────────────────────────────────────────────────────────────────
-function load() {
-  try { decisions = JSON.parse(localStorage.getItem('decidr_v1') || '[]'); }
-  catch(e) { decisions = []; }
-}
-function save() {
-  localStorage.setItem('decidr_v1', JSON.stringify(decisions));
-}
+// orb interpolation state
+let orbRaf = null;
+let orbNow = { r1:79,g1:70,b1:229, r2:99,g2:102,b2:241 };
 
-// ─── NAVIGATION ──────────────────────────────────────────────────────────────
-function showView(name) {
-  document.querySelectorAll('.view').forEach(v => {
-    v.classList.remove('active');
-    v.classList.remove('exit');
-  });
-  const target = document.getElementById('view-' + name);
-  if (target) {
-    // small delay for exit anim
-    setTimeout(() => {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('exit'));
-      target.classList.add('active');
-      target.scrollTop = 0;
-    }, 10);
-    target.classList.add('active');
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
+function load() { try { decisions = JSON.parse(localStorage.getItem('decidr_v1')||'[]'); } catch(e){ decisions=[]; } }
+function save() { localStorage.setItem('decidr_v1', JSON.stringify(decisions)); }
+
+// ─── THEME ENGINE ─────────────────────────────────────────────────────────────
+function applyTheme(id, animate) {
+  const t = THEMES.find(x=>x.id===id) || THEMES[0];
+  currentThemeId = id;
+  localStorage.setItem('decidr_theme', id);
+
+  const R = document.documentElement;
+  R.style.setProperty('--accent',      t.accent);
+  R.style.setProperty('--accent-glow', t.glow);
+  R.style.setProperty('--accent-soft', t.soft);
+  R.style.setProperty('--warm-shadow', t.shadow);
+  document.getElementById('fab-btn').style.background = t.accent;
+
+  // Ripple burst
+  if (animate) {
+    const rip = document.getElementById('orb-ripple');
+    const [r,g,b] = t.c2;
+    rip.style.background = `radial-gradient(ellipse at center, rgba(${r},${g},${b},.6) 0%, rgba(${r},${g},${b},.12) 55%, transparent 70%)`;
+    rip.classList.remove('pop');
+    void rip.offsetWidth;
+    rip.classList.add('pop');
+    setTimeout(()=>rip.classList.remove('pop'), 750);
   }
-  // update nav
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const nb = document.getElementById('nav-' + name);
-  if (nb) nb.classList.add('active');
 
-  // show/hide FAB
-  const fab = document.getElementById('fab-btn');
-  fab.style.display = (name === 'list' || name === 'insights') ? 'flex' : 'none';
+  // Smooth orb morph via rAF — no CSS transition, no jitter
+  const from  = { ...orbNow };
+  const to    = { r1:t.c1[0],g1:t.c1[1],b1:t.c1[2], r2:t.c2[0],g2:t.c2[1],b2:t.c2[2] };
+  const dur   = animate ? 800 : 0;
+  const t0    = performance.now();
+  if (orbRaf) cancelAnimationFrame(orbRaf);
+
+  function tick(now) {
+    const p  = dur===0 ? 1 : Math.min((now-t0)/dur, 1);
+    const e  = 1 - Math.pow(1-p, 4); // ease-out-quart
+    const lr = (a,b) => Math.round(a+(b-a)*e);
+    orbNow = { r1:lr(from.r1,to.r1), g1:lr(from.g1,to.g1), b1:lr(from.b1,to.b1),
+               r2:lr(from.r2,to.r2), g2:lr(from.g2,to.g2), b2:lr(from.b2,to.b2) };
+    const {r1,g1,b1,r2,g2,b2} = orbNow;
+    document.getElementById('orb-canvas').style.background =
+      `radial-gradient(ellipse at center, rgba(${r1},${g1},${b1},.18) 0%, rgba(${r2},${g2},${b2},.08) 40%, transparent 70%)`;
+    if (p<1) orbRaf = requestAnimationFrame(tick);
+    else orbRaf = null;
+  }
+  orbRaf = requestAnimationFrame(tick);
+}
+
+// ─── CUSTOMIZE VIEW ──────────────────────────────────────────────────────────
+function renderThemeGrid() {
+  const grid = document.getElementById('theme-grid');
+  grid.innerHTML = THEMES.map(t => {
+    const [r,g,b] = t.c2;
+    const sel = t.id===currentThemeId;
+    const glowStyle = sel ? `box-shadow:0 0 20px 5px rgba(${r},${g},${b},.55);` : '';
+    return `<div class="theme-card${sel?' selected':''}" id="tc-${t.id}" onclick="pickTheme('${t.id}')">
+      <div class="theme-orb" style="background:radial-gradient(ellipse at 38% 32%, rgba(${t.c1[0]},${t.c1[1]},${t.c1[2]},.95) 0%, rgba(${r},${g},${b},.65) 50%, rgba(${r},${g},${b},.2) 100%);${glowStyle}"></div>
+      <div class="theme-name">${t.name}</div>
+      <div class="theme-tick"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#0a0a0f" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+    </div>`;
+  }).join('');
+}
+
+function pickTheme(id) {
+  applyTheme(id, true);
+  // Update grid instantly without re-render
+  document.querySelectorAll('.theme-card').forEach(c=>c.classList.remove('selected'));
+  const card = document.getElementById('tc-'+id);
+  if (card) {
+    card.classList.add('selected');
+    const t = THEMES.find(x=>x.id===id);
+    const [r,g,b] = t.c2;
+    card.querySelector('.theme-orb').style.boxShadow = `0 0 20px 5px rgba(${r},${g},${b},.55)`;
+  }
+  showToast(THEMES.find(x=>x.id===id).name + ' applied');
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const v = document.getElementById('view-'+name);
+  if (v) { v.classList.add('active'); v.scrollTop=0; }
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nb = document.getElementById('nav-'+name);
+  if (nb) nb.classList.add('active');
+  document.getElementById('fab-btn').style.display =
+    (name==='list'||name==='insights') ? 'flex' : 'none';
 }
 
 function navTo(name) {
-  if (name === 'list') renderList();
-  if (name === 'insights') renderInsights();
+  if (name==='list')     renderList();
+  if (name==='insights') renderInsights();
+  if (name==='customize') renderThemeGrid();
   showView(name);
 }
 
 // ─── LIST ─────────────────────────────────────────────────────────────────────
 function setFilter(cat) {
   currentFilter = cat;
-  document.querySelectorAll('.filter-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.cat === cat);
-  });
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.cat===cat));
   renderList();
 }
-
 function getDueBadge(d) {
-  const now = Date.now();
-  const created = new Date(d.createdAt).getTime();
-  const daysOld = (now - created) / (1000 * 60 * 60 * 24);
-  const reviewDates = (d.reviews || []).map(r => new Date(r.date).getTime());
-  const lastReview = reviewDates.length ? Math.max(...reviewDates) : 0;
-  const daysSinceReview = lastReview ? (now - lastReview) / (1000 * 60 * 60 * 24) : daysOld;
-
-  // 365 day check
-  if (daysOld >= 365) {
-    const has365 = (d.reviews||[]).some(r => {
-      const rd = (new Date(r.date).getTime() - created) / (1000*60*60*24);
-      return rd >= 330;
-    });
-    if (!has365) return '1 year review due';
-  }
-  if (daysOld >= 90) {
-    const has90 = (d.reviews||[]).some(r => {
-      const rd = (new Date(r.date).getTime() - created) / (1000*60*60*24);
-      return rd >= 80 && rd < 330;
-    });
-    if (!has90) return '90-day review due';
-  }
-  if (daysOld >= 30) {
-    const has30 = (d.reviews||[]).some(r => {
-      const rd = (new Date(r.date).getTime() - created) / (1000*60*60*24);
-      return rd >= 25 && rd < 80;
-    });
-    if (!has30) return '30-day review due';
-  }
+  const now=Date.now(), created=new Date(d.createdAt).getTime();
+  const age=(now-created)/(864e5);
+  const reviews=d.reviews||[];
+  const dayOf=r=>(new Date(r.date).getTime()-created)/864e5;
+  if(age>=365&&!reviews.some(r=>dayOf(r)>=330)) return '1 year review due';
+  if(age>=90 &&!reviews.some(r=>dayOf(r)>=80&&dayOf(r)<330)) return '90-day review due';
+  if(age>=30 &&!reviews.some(r=>dayOf(r)>=25&&dayOf(r)<80))  return '30-day review due';
   return null;
 }
-
-function confidenceHTML(c, small) {
-  const map = { Low: 1, Medium: 2, High: 3 };
-  const n = map[c] || 0;
-  let h = '<div class="confidence-dots">';
-  for (let i = 1; i <= 3; i++) {
-    h += `<div class="confidence-dot${i <= n ? ' active' : ''}"></div>`;
-  }
-  h += '</div>';
-  return h;
+function confDots(c) {
+  const n={Low:1,Medium:2,High:3}[c]||0;
+  return '<div class="confidence-dots">'+[1,2,3].map(i=>`<div class="confidence-dot${i<=n?' active':''}"></div>`).join('')+'</div>';
 }
-
 function renderList() {
-  const filtered = currentFilter === 'All'
-    ? decisions
-    : decisions.filter(d => d.category === currentFilter);
-  const sub = document.getElementById('list-sub');
-  sub.textContent = decisions.length === 0
-    ? 'No decisions recorded yet'
-    : `${decisions.length} decision${decisions.length !== 1 ? 's' : ''} recorded`;
-
-  const container = document.getElementById('list-container');
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-      <div class="empty-title">Nothing here yet</div>
-      <div class="empty-sub">Tap the + button to record your first decision in this category.</div>
-    </div>`;
+  const filtered = currentFilter==='All'?decisions:decisions.filter(d=>d.category===currentFilter);
+  document.getElementById('list-sub').textContent = decisions.length===0
+    ?'No decisions recorded yet':`${decisions.length} decision${decisions.length!==1?'s':''} recorded`;
+  const c=document.getElementById('list-container');
+  if(!filtered.length){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div><div class="empty-title">Nothing here yet</div><div class="empty-sub">Tap + to record your first decision.</div></div>`;
     return;
   }
-
-  // sort newest first
-  const sorted = [...filtered].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-  container.innerHTML = sorted.map(d => {
-    const badge = getDueBadge(d);
-    const date = new Date(d.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    const reviewCount = (d.reviews || []).length;
+  c.innerHTML=[...filtered].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(d=>{
+    const badge=getDueBadge(d);
+    const date=new Date(d.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const rc=(d.reviews||[]).length;
     return `<div class="card" onclick="openDetail('${d.id}')">
       <div class="card-category">${d.category}</div>
-      <div class="card-title">${escHtml(d.title)}</div>
-      ${badge ? `<div style="margin:10px 0 4px"><span class="review-badge">${badge}</span></div>` : ''}
-      <div class="card-meta">
-        ${confidenceHTML(d.confidence)}
-        <span>${date}</span>
-        ${reviewCount > 0 ? `<span>${reviewCount} review${reviewCount > 1 ? 's' : ''}</span>` : ''}
-      </div>
+      <div class="card-title">${esc(d.title)}</div>
+      ${badge?`<div style="margin:10px 0 4px"><span class="review-badge">${badge}</span></div>`:''}
+      <div class="card-meta">${confDots(d.confidence)}<span>${date}</span>${rc?`<span>${rc} review${rc>1?'s':''}</span>`:''}</div>
     </div>`;
   }).join('');
 }
 
-// ─── INSIGHTS ────────────────────────────────────────────────────────────────
+// ─── INSIGHTS ─────────────────────────────────────────────────────────────────
 function renderInsights() {
-  const el = document.getElementById('insights-content');
-  if (decisions.length === 0) {
-    el.innerHTML = `<div class="empty-state">
-      <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg></div>
-      <div class="empty-title">Patterns emerge over time</div>
-      <div class="empty-sub">Start recording decisions and reviewing them to see insights here.</div>
-    </div>`;
+  const el=document.getElementById('insights-content');
+  if(!decisions.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg></div><div class="empty-title">Patterns emerge over time</div><div class="empty-sub">Record and review decisions to see insights.</div></div>`;
     return;
   }
-
-  const total = decisions.length;
-  const reviewed = decisions.filter(d => d.reviews && d.reviews.length > 0).length;
-  const dueCount = decisions.filter(d => getDueBadge(d)).length;
-
-  const catCounts = {};
-  decisions.forEach(d => { catCounts[d.category] = (catCounts[d.category] || 0) + 1; });
-  const topCat = Object.entries(catCounts).sort((a,b) => b[1]-a[1])[0];
-
-  const allRatings = [];
-  decisions.forEach(d => (d.reviews||[]).forEach(r => allRatings.push(r.rating)));
-  const ratingMap = {'Much worse':1,'Worse':2,'As expected':3,'Better':4,'Much better':5};
-  const avgRating = allRatings.length
-    ? (allRatings.reduce((s,r) => s + (ratingMap[r]||3), 0) / allRatings.length).toFixed(1)
-    : '—';
-
-  el.innerHTML = `
-    <div class="insight-row">
-      <div class="insight-tile">
-        <div class="insight-num">${total}</div>
-        <div class="insight-label">Decisions</div>
-      </div>
-      <div class="insight-tile">
-        <div class="insight-num">${reviewed}</div>
-        <div class="insight-label">Reviewed</div>
-      </div>
-    </div>
-    <div class="insight-row">
-      <div class="insight-tile">
-        <div class="insight-num">${dueCount}</div>
-        <div class="insight-label">Reviews due</div>
-      </div>
-      <div class="insight-tile">
-        <div class="insight-num" style="font-size:22px;padding-top:4px">${avgRating !== '—' ? avgRating + '/5' : '—'}</div>
-        <div class="insight-label">Avg. outcome</div>
-      </div>
-    </div>
-    ${topCat ? `<div style="padding:0 16px 16px">
-      <div class="insight-tile">
-        <div class="insight-label" style="margin-bottom:6px">Most common category</div>
-        <div class="insight-num" style="font-size:22px;font-family:var(--serif)">${topCat[0]}</div>
-        <div class="insight-label">${topCat[1]} decision${topCat[1]>1?'s':''}</div>
-      </div>
-    </div>` : ''}
-    ${allRatings.length > 0 ? `
-    <div style="padding:0 16px">
-      <div class="insight-tile">
-        <div class="insight-label" style="margin-bottom:12px">Outcome distribution</div>
-        ${['Much better','Better','As expected','Worse','Much worse'].map(r => {
-          const count = allRatings.filter(x => x === r).length;
-          const pct = Math.round(count / allRatings.length * 100);
-          return `<div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span style="font-size:12px;color:var(--text-muted)">${r}</span>
-              <span style="font-size:12px;color:var(--text-dim)">${count}</span>
-            </div>
-            <div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">
-              <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px;transition:width 600ms var(--ease)"></div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : ''}
-    <div class="spacer"></div>
-  `;
+  const total=decisions.length, reviewed=decisions.filter(d=>d.reviews?.length>0).length, due=decisions.filter(d=>getDueBadge(d)).length;
+  const cats={}; decisions.forEach(d=>{cats[d.category]=(cats[d.category]||0)+1;});
+  const top=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+  const ratings=[]; decisions.forEach(d=>(d.reviews||[]).forEach(r=>ratings.push(r.rating)));
+  const rm={'Much worse':1,'Worse':2,'As expected':3,'Better':4,'Much better':5};
+  const avg=ratings.length?(ratings.reduce((s,r)=>s+(rm[r]||3),0)/ratings.length).toFixed(1):'—';
+  el.innerHTML=`
+    <div class="insight-row"><div class="insight-tile"><div class="insight-num">${total}</div><div class="insight-label">Decisions</div></div><div class="insight-tile"><div class="insight-num">${reviewed}</div><div class="insight-label">Reviewed</div></div></div>
+    <div class="insight-row"><div class="insight-tile"><div class="insight-num">${due}</div><div class="insight-label">Reviews due</div></div><div class="insight-tile"><div class="insight-num" style="font-size:22px;padding-top:4px">${avg!=='—'?avg+'/5':'—'}</div><div class="insight-label">Avg. outcome</div></div></div>
+    ${top?`<div style="padding:0 16px 16px"><div class="insight-tile"><div class="insight-label" style="margin-bottom:6px">Most common</div><div class="insight-num" style="font-size:22px;font-family:var(--serif)">${top[0]}</div><div class="insight-label">${top[1]} decision${top[1]>1?'s':''}</div></div></div>`:''}
+    ${ratings.length?`<div style="padding:0 16px"><div class="insight-tile"><div class="insight-label" style="margin-bottom:12px">Outcome distribution</div>${['Much better','Better','As expected','Worse','Much worse'].map(r=>{const cnt=ratings.filter(x=>x===r).length,pct=Math.round(cnt/ratings.length*100);return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text-muted)">${r}</span><span style="font-size:12px;color:var(--text-dim)">${cnt}</span></div><div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div></div>`;}).join('')}</div></div>`:''}
+    <div class="spacer"></div>`;
 }
 
 // ─── CREATE ───────────────────────────────────────────────────────────────────
-function showCreate() {
-  currentStep = 0;
-  // reset form
-  ['f-title','f-situation','f-options','f-chosen','f-reasoning','f-confidence','f-expected','f-category'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.querySelectorAll('.seg-opt').forEach(b => b.classList.remove('selected'));
-  showStep(0);
-  showView('create');
+function showCreate(){
+  currentStep=0;
+  ['f-title','f-situation','f-options','f-chosen','f-reasoning','f-confidence','f-expected','f-category'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.querySelectorAll('.seg-opt').forEach(b=>b.classList.remove('selected'));
+  showStep(0); showView('create');
 }
-
-function cancelCreate() {
-  showView('list');
-  renderList();
+function cancelCreate(){ showView('list'); renderList(); }
+function showStep(n){
+  currentStep=n;
+  document.querySelectorAll('.form-step').forEach((s,i)=>s.classList.toggle('active',i===n));
+  for(let i=0;i<3;i++){const d=document.getElementById('sd-'+i);d.classList.toggle('done',i<n);d.classList.toggle('active',i===n);}
 }
-
-function showStep(n) {
-  currentStep = n;
-  document.querySelectorAll('.form-step').forEach((s, i) => {
-    s.classList.toggle('active', i === n);
-  });
-  for (let i = 0; i < 3; i++) {
-    const dot = document.getElementById('sd-' + i);
-    dot.classList.toggle('done', i < n);
-    dot.classList.toggle('active', i === n);
-  }
-}
-
-function nextStep(n) {
-  if (n > currentStep) {
-    // validate current step
-    if (currentStep === 0) {
-      if (!document.getElementById('f-title').value.trim()) { showToast('Please enter the decision'); return; }
-      if (!document.getElementById('f-category').value) { showToast('Please select a category'); return; }
-      if (!document.getElementById('f-chosen').value.trim()) { showToast('Please enter the choice you made'); return; }
-    }
-    if (currentStep === 1) {
-      if (!document.getElementById('f-reasoning').value.trim()) { showToast('Please describe your reasoning'); return; }
-      if (!document.getElementById('f-confidence').value) { showToast('Please select a confidence level'); return; }
-    }
+function nextStep(n){
+  if(n>currentStep){
+    if(currentStep===0){if(!document.getElementById('f-title').value.trim()){showToast('Please enter the decision');return;}if(!document.getElementById('f-category').value){showToast('Please select a category');return;}if(!document.getElementById('f-chosen').value.trim()){showToast('Please enter the choice you made');return;}}
+    if(currentStep===1){if(!document.getElementById('f-reasoning').value.trim()){showToast('Please describe your reasoning');return;}if(!document.getElementById('f-confidence').value){showToast('Please select a confidence level');return;}}
   }
   showStep(n);
 }
-
-function selectSeg(fieldId, btn) {
-  const ctrl = btn.closest('.seg-control');
-  ctrl.querySelectorAll('.seg-opt').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  document.getElementById(fieldId).value = btn.dataset.val;
-}
-
-function saveDecision() {
-  const expected = document.getElementById('f-expected').value.trim();
-  if (!expected) { showToast('Please describe the expected outcome'); return; }
-
-  const d = {
-    id: Date.now().toString(),
-    title: document.getElementById('f-title').value.trim(),
-    category: document.getElementById('f-category').value,
-    situation: document.getElementById('f-situation').value.trim(),
-    options: document.getElementById('f-options').value.trim(),
-    chosen: document.getElementById('f-chosen').value.trim(),
-    reasoning: document.getElementById('f-reasoning').value.trim(),
-    confidence: document.getElementById('f-confidence').value,
-    expected,
-    createdAt: new Date().toISOString(),
-    reviews: []
-  };
-
-  decisions.unshift(d);
-  save();
-  showToast('Decision recorded');
-  renderList();
-  showView('list');
+function selectSeg(fid,btn){btn.closest('.seg-control').querySelectorAll('.seg-opt').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');document.getElementById(fid).value=btn.dataset.val;}
+function saveDecision(){
+  const exp=document.getElementById('f-expected').value.trim();
+  if(!exp){showToast('Please describe the expected outcome');return;}
+  decisions.unshift({id:Date.now().toString(),title:document.getElementById('f-title').value.trim(),category:document.getElementById('f-category').value,situation:document.getElementById('f-situation').value.trim(),options:document.getElementById('f-options').value.trim(),chosen:document.getElementById('f-chosen').value.trim(),reasoning:document.getElementById('f-reasoning').value.trim(),confidence:document.getElementById('f-confidence').value,expected:exp,createdAt:new Date().toISOString(),reviews:[]});
+  save(); showToast('Decision recorded'); renderList(); showView('list');
 }
 
 // ─── DETAIL ───────────────────────────────────────────────────────────────────
-function openDetail(id) {
-  const d = decisions.find(x => x.id === id);
-  if (!d) return;
-  currentDecisionId = id;
-
-  document.getElementById('d-category').textContent = d.category;
-  document.getElementById('d-title').textContent = d.title;
-  document.getElementById('d-date').textContent = new Date(d.createdAt).toLocaleDateString('en-US', {
-    weekday:'long', year:'numeric', month:'long', day:'numeric'
-  });
-
-  // Confidence dots
-  const map = { Low: 1, Medium: 2, High: 3 };
-  const n = map[d.confidence] || 0;
-  const dotsEl = document.getElementById('d-confidence-dots');
-  dotsEl.innerHTML = '';
-  for (let i = 1; i <= 3; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'confidence-dot' + (i <= n ? ' active' : '');
-    dotsEl.appendChild(dot);
-  }
-  const confLabel = document.createElement('span');
-  confLabel.style.cssText = 'font-size:12px;color:var(--text-muted);margin-left:8px';
-  confLabel.textContent = d.confidence;
-  dotsEl.appendChild(confLabel);
-
-  document.getElementById('d-situation').textContent = d.situation || '—';
-  document.getElementById('d-options').textContent = d.options || '—';
-  document.getElementById('d-chosen').textContent = d.chosen;
-  document.getElementById('d-reasoning').textContent = d.reasoning;
-  document.getElementById('d-expected').textContent = d.expected;
-
-  // Reviews
-  const rc = document.getElementById('reviews-container');
-  const rh = document.getElementById('reviews-heading');
-  if (!d.reviews || d.reviews.length === 0) {
-    rh.textContent = 'No reviews yet';
-    rc.innerHTML = '';
-  } else {
-    rh.textContent = `${d.reviews.length} Review${d.reviews.length > 1 ? 's' : ''}`;
-    rc.innerHTML = d.reviews.map(r => `
-      <div class="review-card">
-        <div class="review-card-header">
-          <span class="review-rating">${r.rating}</span>
-          <span class="review-date">${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
-        </div>
-        <div class="detail-section-content" style="margin-bottom:10px">${escHtml(r.outcome)}</div>
-        ${r.learned ? `<div style="padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
-          <div class="detail-section-label" style="margin-bottom:6px">Lesson</div>
-          <div class="detail-section-content" style="font-style:italic">${escHtml(r.learned)}</div>
-        </div>` : ''}
-      </div>
-    `).join('');
-  }
-
+function openDetail(id){
+  const d=decisions.find(x=>x.id===id); if(!d)return;
+  currentDecisionId=id;
+  document.getElementById('d-category').textContent=d.category;
+  document.getElementById('d-title').textContent=d.title;
+  document.getElementById('d-date').textContent=new Date(d.createdAt).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const n={Low:1,Medium:2,High:3}[d.confidence]||0;
+  const de=document.getElementById('d-confidence-dots'); de.innerHTML='';
+  for(let i=1;i<=3;i++){const dot=document.createElement('div');dot.className='confidence-dot'+(i<=n?' active':'');de.appendChild(dot);}
+  const lbl=document.createElement('span');lbl.style.cssText='font-size:12px;color:var(--text-muted);margin-left:8px';lbl.textContent=d.confidence;de.appendChild(lbl);
+  document.getElementById('d-situation').textContent=d.situation||'—';
+  document.getElementById('d-options').textContent=d.options||'—';
+  document.getElementById('d-chosen').textContent=d.chosen;
+  document.getElementById('d-reasoning').textContent=d.reasoning;
+  document.getElementById('d-expected').textContent=d.expected;
+  const rc=document.getElementById('reviews-container'),rh=document.getElementById('reviews-heading');
+  if(!d.reviews||!d.reviews.length){rh.textContent='No reviews yet';rc.innerHTML='';}
+  else{rh.textContent=`${d.reviews.length} Review${d.reviews.length>1?'s':''}`;rc.innerHTML=d.reviews.map(r=>`<div class="review-card"><div class="review-card-header"><span class="review-rating">${r.rating}</span><span class="review-date">${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div><div class="detail-section-content" style="margin-bottom:10px">${esc(r.outcome)}</div>${r.learned?`<div style="padding-top:10px;border-top:1px solid rgba(255,255,255,.06)"><div class="detail-section-label" style="margin-bottom:6px">Lesson</div><div class="detail-section-content" style="font-style:italic">${esc(r.learned)}</div></div>`:''}</div>`).join('');}
   showView('detail');
 }
 
 // ─── REVIEW ───────────────────────────────────────────────────────────────────
-function openAddReview() {
-  document.getElementById('r-rating').value = '';
-  document.getElementById('r-outcome').value = '';
-  document.getElementById('r-learned').value = '';
-  document.querySelectorAll('#view-review .seg-opt').forEach(b => b.classList.remove('selected'));
-  showView('review');
-}
-
-function saveReview() {
-  const rating = document.getElementById('r-rating').value;
-  const outcome = document.getElementById('r-outcome').value.trim();
-  const learned = document.getElementById('r-learned').value.trim();
-
-  if (!rating) { showToast('Please rate the outcome'); return; }
-  if (!outcome) { showToast('Please describe what happened'); return; }
-
-  const d = decisions.find(x => x.id === currentDecisionId);
-  if (!d) return;
-
-  d.reviews.push({ date: new Date().toISOString(), rating, outcome, learned });
-  save();
-  showToast('Review saved');
-  openDetail(currentDecisionId);
+function openAddReview(){document.getElementById('r-rating').value='';document.getElementById('r-outcome').value='';document.getElementById('r-learned').value='';document.querySelectorAll('#view-review .seg-opt').forEach(b=>b.classList.remove('selected'));showView('review');}
+function saveReview(){
+  const rating=document.getElementById('r-rating').value,outcome=document.getElementById('r-outcome').value.trim(),learned=document.getElementById('r-learned').value.trim();
+  if(!rating){showToast('Please rate the outcome');return;}if(!outcome){showToast('Please describe what happened');return;}
+  const d=decisions.find(x=>x.id===currentDecisionId);if(!d)return;
+  d.reviews.push({date:new Date().toISOString(),rating,outcome,learned});save();showToast('Review saved');openDetail(currentDecisionId);
 }
 
 // ─── UTIL ─────────────────────────────────────────────────────────────────────
-function escHtml(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 load();
+applyTheme(currentThemeId, false);
 renderList();
 </script>
 </body>
