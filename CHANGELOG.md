@@ -1,9 +1,15 @@
 # Changelog
 
-All notable changes to Decidr are documented here.  
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+All notable changes to Decidr are documented here.
 
 ---
+
+## [1.1.0] — 1st Update
+
+### Added
+- Added 8 themes under the new customization Tab.
+- You can now choose any orb theme from the Customization tab and customize the look of the app instantly.
+
 
 ## [1.0.0] — Initial Release
 
