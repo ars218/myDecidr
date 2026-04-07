@@ -1,7 +1,20 @@
 # Changelog
 
 All notable changes to Decidr are documented here.
+---
+## [1.2.1] — 1st Update
 
+### Added
+- Added top pill shape bar at top of themes section for easy access.
+---
+## [1.2.0] — 1st Update
+
+### Added
+- Added new Monochrome and Gradient themes.
+- Updated the UI.
+- Optimized the app.
+- Updated the Bottom Navigation bar.
+- Animations are now more fluid.
 ---
 
 ## [1.1.0] — 1st Update
