@@ -25,6 +25,7 @@
   --mono:'DM Mono',monospace; --display:'Playfair Display',serif;
   --ease:cubic-bezier(.4,0,.2,1);
   --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);
 }
 
 /* ════════════════════════════════════════
@@ -79,7 +80,7 @@ body.grad #grad-header-blur{opacity:1}
 /* ════════════════════════════════════════
    ORB MODE — current fluid dark style
 ════════════════════════════════════════ */
-body:not(.mono):not(.grad) .header{padding:56px 24px 20px}
+body:not(.mono):not(.grad) .header{padding:calc(56px + var(--safe-top)) 24px 20px}
 body:not(.mono):not(.grad) .header-eyebrow{font-size:10px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
 body:not(.mono):not(.grad) .header-title{font-family:var(--serif);font-size:36px;font-weight:300;letter-spacing:-.01em;line-height:1.1}
 body:not(.mono):not(.grad) .header-sub{font-size:13px;color:var(--text-muted);margin-top:10px;font-weight:300;line-height:1.5}
@@ -111,7 +112,7 @@ body:not(.mono):not(.grad) .review-rating{font-family:var(--serif);font-size:16p
    sharp corners, thick rules, monospace,
    heavy serif display, light or dark paper
 ════════════════════════════════════════ */
-body.mono .header{padding:52px 0 0}
+body.mono .header{padding:calc(52px + var(--safe-top)) 0 0}
 body.mono .header-eyebrow{font-family:var(--mono);font-size:9px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);padding:0 24px;margin-bottom:0;border-bottom:2px solid var(--accent);padding-bottom:10px}
 body.mono .header-title{font-family:var(--display);font-size:48px;font-weight:700;font-style:italic;letter-spacing:-.02em;line-height:1.0;padding:16px 24px 0;color:var(--text)}
 body.mono .header-sub{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--text-muted);padding:8px 24px 16px;border-bottom:1px solid var(--border);margin-top:0}
@@ -164,7 +165,7 @@ body.mono .empty-sub{font-family:var(--mono);font-size:11px;color:var(--text-mut
 ════════════════════════════════════════ */
 body.grad{--text:white;--text-muted:rgba(255,255,255,.65);--text-dim:rgba(255,255,255,.3);--border:rgba(255,255,255,.15)}
 
-body.grad .header{padding:64px 28px 24px}
+body.grad .header{padding:calc(64px + var(--safe-top)) 28px 24px}
 body.grad .header-eyebrow{font-size:11px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:16px;font-family:var(--sans)}
 body.grad .header-title{font-family:var(--serif);font-size:52px;font-weight:300;font-style:italic;letter-spacing:-.02em;line-height:.95;color:white;text-shadow:0 4px 40px rgba(0,0,0,.3)}
 body.grad .header-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:12px}
@@ -217,7 +218,7 @@ body.grad .empty-sub{color:rgba(255,255,255,.45)}
 /* ════════════════════════════════════════
    SHARED UTILITY
 ════════════════════════════════════════ */
-.header{padding:56px 24px 20px}
+.header{padding:calc(56px + var(--safe-top)) 24px 20px}
 .header-eyebrow{font-size:10px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;transition:color 700ms var(--ease)}
 .header-title{font-family:var(--serif);font-size:36px;font-weight:300;letter-spacing:-.01em;line-height:1.1;transition:color 700ms var(--ease)}
 .header-sub{font-size:13px;color:var(--text-muted);margin-top:10px;font-weight:300;line-height:1.5}
@@ -398,6 +399,361 @@ body.grad .toast{background:rgba(255,255,255,.15);backdrop-filter:blur(20px);bor
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 ::-webkit-scrollbar{display:none}
 *{scrollbar-width:none}
+
+
+/* ══════════════════════════════════════════════════════════
+   TUTORIAL SYSTEM
+══════════════════════════════════════════════════════════ */
+
+/* ── Tutorial prompt (the initial ask) ── */
+#tut-prompt-wrap {
+  position: fixed; inset: 0; z-index: 4000;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: calc(32px + var(--safe-bottom));
+  background: rgba(0,0,0,0);
+  transition: background 400ms ease;
+  pointer-events: none;
+}
+#tut-prompt-wrap.show {
+  background: rgba(0,0,0,.45);
+  pointer-events: all;
+}
+#tut-prompt {
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 28px 24px 20px;
+  width: calc(100% - 32px);
+  max-width: 380px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04);
+  transform: translateY(120%);
+  transition: transform 500ms cubic-bezier(.34,1.25,.64,1);
+}
+#tut-prompt-wrap.show #tut-prompt {
+  transform: translateY(0);
+}
+.tut-prompt-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: var(--accent-soft);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.tut-prompt-title {
+  font-family: var(--serif); font-size: 22px; font-weight: 400; font-style: italic;
+  color: var(--text); margin-bottom: 8px; line-height: 1.2;
+}
+.tut-prompt-sub {
+  font-size: 13px; font-weight: 300; color: var(--text-muted);
+  line-height: 1.6; margin-bottom: 22px;
+}
+.tut-prompt-btns {
+  display: flex; gap: 10px;
+}
+.tut-btn-no {
+  flex: 1; padding: 13px; border-radius: 50px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); font-family: var(--sans); font-size: 14px; font-weight: 300;
+  cursor: pointer; transition: all 200ms ease;
+}
+.tut-btn-no:active { background: rgba(255,255,255,.04); }
+.tut-btn-yes {
+  flex: 2; padding: 13px; border-radius: 50px;
+  background: var(--accent); border: none;
+  color: white; font-family: var(--sans); font-size: 14px; font-weight: 500;
+  cursor: pointer; box-shadow: 0 4px 16px var(--accent-glow);
+  transition: all 200ms ease;
+}
+.tut-btn-yes:active { transform: scale(.97); }
+
+/* ── Tutorial overlay ── */
+#tut-overlay {
+  position: fixed; inset: 0; z-index: 3500;
+  pointer-events: none;
+  opacity: 0; transition: opacity 350ms ease;
+}
+#tut-overlay.active { opacity: 1; pointer-events: all; }
+
+/* Dimming backdrop with cutout hole */
+#tut-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.45);
+  transition: background 300ms ease;
+}
+/* The spotlight hole - drawn via clip-path in JS */
+#tut-spotlight {
+  position: absolute;
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,.35);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.45), 0 0 0 2px rgba(255,255,255,.5), 0 0 40px rgba(255,255,255,.12);
+  transition: all 420ms cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+/* ── Tooltip card ── */
+#tut-tip {
+  position: absolute;
+  width: calc(100vw - 32px); max-width: 340px;
+  left: 50%; transform: translateX(-50%);
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 20px 20px 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 16px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04);
+  transition: top 400ms cubic-bezier(.4,0,.2,1),
+              bottom 400ms cubic-bezier(.4,0,.2,1),
+              opacity 300ms ease, transform 400ms cubic-bezier(.34,1.1,.64,1);
+  pointer-events: all;
+  z-index: 1;
+}
+#tut-tip.hidden { opacity:0; transform:translateX(-50%) translateY(16px); pointer-events:none; }
+
+/* Tip caret (arrow pointing to spotlight) */
+#tut-caret {
+  position: absolute;
+  width: 0; height: 0;
+  left: 50%; transform: translateX(-50%);
+  transition: all 400ms cubic-bezier(.4,0,.2,1);
+}
+.caret-up {
+  top: -9px!important;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 10px solid var(--surface);
+}
+.caret-down {
+  bottom: -9px!important; top:auto!important;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 10px solid var(--surface);
+}
+
+.tut-step-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 9px; font-weight: 400; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+}
+.tut-step-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+  animation: tutPulse 2s ease-in-out infinite;
+}
+@keyframes tutPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.tut-tip-title {
+  font-family: var(--serif); font-size: 20px; font-weight: 400; font-style: italic;
+  color: var(--text); margin-bottom: 7px; line-height: 1.25;
+}
+.tut-tip-body {
+  font-size: 13px; font-weight: 300; color: var(--text-muted);
+  line-height: 1.65; margin-bottom: 16px;
+}
+
+/* Progress bar */
+.tut-progress-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.tut-progress-track {
+  flex: 1; height: 2px; border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+.tut-progress-fill {
+  height: 100%; border-radius: 2px; background: var(--accent);
+  transition: width 400ms cubic-bezier(.4,0,.2,1);
+}
+.tut-step-count {
+  font-family: var(--mono); font-size: 10px; color: var(--text-muted);
+  white-space: nowrap; letter-spacing: .08em;
+}
+
+/* Nav buttons row */
+.tut-nav-row { display: flex; gap: 8px; }
+.tut-skip {
+  padding: 11px 16px; border-radius: 50px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); font-family: var(--sans); font-size: 13px; font-weight: 300;
+  cursor: pointer; white-space: nowrap; transition: all 200ms ease;
+}
+.tut-skip:active { background: rgba(255,255,255,.04); }
+.tut-next {
+  flex: 1; padding: 12px; border-radius: 50px;
+  background: var(--accent); border: none;
+  color: white; font-family: var(--sans); font-size: 14px; font-weight: 500;
+  cursor: pointer; box-shadow: 0 4px 14px var(--accent-glow);
+  transition: all 200ms ease;
+}
+.tut-next:active { transform: scale(.97); }
+.tut-next.finish { background: var(--accent); }
+
+/* ── Finger pointer animation ── */
+#tut-finger {
+  position: absolute; font-size: 26px;
+  pointer-events: none; z-index: 2;
+  opacity: 0;
+  transition: opacity 300ms ease, left 400ms cubic-bezier(.4,0,.2,1), top 400ms cubic-bezier(.4,0,.2,1);
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.5));
+  animation: fingerBounce 1.4s ease-in-out infinite;
+}
+#tut-finger.show { opacity: 1; }
+@keyframes fingerBounce {
+  0%,100% { transform: translate(-50%,-50%) scale(1); }
+  50% { transform: translate(-50%,-50%) scale(1.12) translateY(-4px); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ONBOARDING OVERLAY
+══════════════════════════════════════════════════════════ */
+#onboarding{
+  position:fixed;inset:0;z-index:5000;
+  overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#onboarding.gone{display:none}
+#ob-canvas{position:absolute;inset:0;width:100%;height:100%}
+#ob-overlay{position:absolute;inset:0;background:rgba(0,0,0,.15);transition:background 1200ms ease}
+
+.ob-screen{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 36px;
+  opacity:0;pointer-events:none;
+  transition:opacity 550ms cubic-bezier(.4,0,.2,1),transform 550ms cubic-bezier(.4,0,.2,1);
+  transform:translateY(22px);
+}
+.ob-screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.ob-screen.exit-up{opacity:0;transform:translateY(-22px);pointer-events:none}
+
+/* Screen 1 */
+.ob-welcome{
+  font-family:var(--sans);font-size:11px;font-weight:300;
+  letter-spacing:.38em;text-transform:uppercase;color:rgba(255,255,255,.55);
+  opacity:0;transform:translateY(-10px);
+  transition:opacity 700ms 850ms ease,transform 700ms 850ms ease;
+  margin-bottom:14px;
+}
+.ob-welcome.show{opacity:1;transform:translateY(0)}
+.ob-logo{
+  font-family:var(--serif);font-size:60px;font-weight:300;font-style:italic;
+  color:white;text-align:center;line-height:1;
+  text-shadow:0 4px 40px rgba(0,0,0,.4),0 0 80px rgba(255,255,255,.07);
+  opacity:0;transform:translateY(32px) scale(.9);
+  transition:opacity 850ms 80ms cubic-bezier(.2,.8,.4,1),
+             transform 950ms 80ms cubic-bezier(.2,.8,.4,1);
+}
+.ob-logo.show{opacity:1;transform:translateY(0) scale(1)}
+.ob-logo.nudge{transform:translateY(12px) scale(1)!important;transition:transform 550ms ease!important}
+
+/* Screen 2 */
+.ob-tagline{
+  font-family:var(--serif);font-size:36px;font-weight:300;font-style:italic;
+  color:white;line-height:1.2;text-align:center;margin-bottom:22px;
+  text-shadow:0 2px 30px rgba(0,0,0,.3);
+}
+.ob-body{
+  font-family:var(--sans);font-size:15px;font-weight:300;
+  color:rgba(255,255,255,.62);text-align:center;line-height:1.72;max-width:280px;
+}
+
+/* Screen 3 */
+#ob-s3{justify-content:flex-start;padding-top:60px;overflow-y:auto}
+.ob-theme-header{text-align:center;margin-bottom:24px;width:100%}
+.ob-theme-title{
+  font-family:var(--serif);font-size:32px;font-weight:300;font-style:italic;
+  color:white;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,.3);
+}
+.ob-theme-sub{font-family:var(--sans);font-size:13px;font-weight:300;color:rgba(255,255,255,.52)}
+
+#ob-tab-wrap{width:100%;margin-bottom:18px}
+#ob-tab-track{
+  position:relative;display:flex;align-items:stretch;
+  background:rgba(255,255,255,.1);border-radius:32px;padding:3px;
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+#ob-tab-ind{
+  position:absolute;top:3px;left:3px;height:calc(100% - 6px);
+  border-radius:28px;background:rgba(255,255,255,.28);
+  box-shadow:0 2px 14px rgba(255,255,255,.15);
+  transition:left 320ms cubic-bezier(.34,1.35,.64,1),width 320ms cubic-bezier(.34,1.35,.64,1);
+  pointer-events:none;z-index:0;
+}
+.ob-tab-btn{
+  position:relative;z-index:1;flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:9px 8px 8px;cursor:pointer;background:none;border:none;
+  color:rgba(255,255,255,.38);border-radius:28px;
+  font-family:var(--sans);font-size:9px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;
+  transition:color 280ms ease;-webkit-tap-highlight-color:transparent;
+}
+.ob-tab-btn.active{color:white}
+.ob-tab-btn svg{transition:transform 200ms ease}
+.ob-tab-btn:active svg{transform:scale(.85)}
+#ob-panels{width:100%}
+.ob-panel{display:none}
+.ob-panel.active{display:block}
+#ob-s3 .theme-grid-color{gap:10px}
+#ob-s3 .theme-grid-grad{gap:10px}
+#ob-s3 .theme-grid-mono{border:1px solid rgba(255,255,255,.12)}
+#ob-s3 .theme-card{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:16px}
+#ob-s3 .theme-card.selected{border-color:rgba(255,255,255,.5);box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+#ob-s3 .theme-name{color:rgba(255,255,255,.82)}
+#ob-s3 .theme-card-grad.selected{border-color:rgba(255,255,255,.65);box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+#ob-s3 .theme-card-mono.selected{border-color:rgba(255,255,255,.55)}
+
+/* Screen 4 */
+.ob-check-ring{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 28px;backdrop-filter:blur(8px);
+  animation:ringPop 650ms cubic-bezier(.2,.8,.4,1) both;
+}
+@keyframes ringPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.ob-great-title{
+  font-family:var(--serif);font-size:46px;font-weight:300;font-style:italic;
+  color:white;margin-bottom:12px;line-height:1.0;text-align:center;
+  text-shadow:0 2px 30px rgba(0,0,0,.3);
+}
+.ob-great-theme{
+  font-family:var(--sans);font-size:12px;font-weight:400;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(255,255,255,.5);text-align:center;
+}
+
+/* Shared continue pill */
+.ob-btn{
+  position:absolute;bottom:calc(50px + var(--safe-bottom));
+  left:50%;transform:translateX(-50%) translateY(28px);
+  white-space:nowrap;padding:16px 52px;border-radius:50px;
+  background:rgba(255,255,255,.15);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.32);color:white;
+  font-family:var(--sans);font-size:15px;font-weight:400;letter-spacing:.04em;cursor:pointer;
+  box-shadow:0 8px 32px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.2);
+  opacity:0;
+  transition:opacity 600ms ease,transform 600ms cubic-bezier(.34,1.2,.64,1),
+             background 180ms ease,box-shadow 180ms ease;
+}
+.ob-btn.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ob-btn.muted{opacity:.28!important;pointer-events:none}
+.ob-btn:active{background:rgba(255,255,255,.26)}
+
+/* Progress dots */
+.ob-dots{
+  position:absolute;bottom:calc(24px + var(--safe-bottom));
+  left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;align-items:center;
+}
+.ob-dot{
+  width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.22);
+  transition:all 400ms cubic-bezier(.34,1.2,.64,1);
+}
+.ob-dot.on{background:white;width:20px;border-radius:3px}
+
+/* Launch flash */
+#ob-flash{
+  position:fixed;inset:0;z-index:6000;background:white;
+  opacity:0;pointer-events:none;transition:opacity 300ms ease;
+}
+#ob-flash.go{opacity:1}
+
 </style>
 </head>
 <body>
@@ -605,6 +961,145 @@ body.grad .toast{background:rgba(255,255,255,.15);backdrop-filter:blur(20px);bor
   <svg id="fab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 <div class="toast" id="toast"></div>
+
+
+<!-- ═══════════ TUTORIAL PROMPT ═══════════ -->
+<div id="tut-prompt-wrap">
+  <div id="tut-prompt">
+    <div class="tut-prompt-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 16v-4M12 8h.01"/>
+      </svg>
+    </div>
+    <div class="tut-prompt-title">Want a quick tour?</div>
+    <div class="tut-prompt-sub">We'll walk you through everything — Journal, Patterns, and the Theme section. Takes about 30 seconds.</div>
+    <div class="tut-prompt-btns">
+      <button class="tut-btn-no" onclick="tutDecline()">Maybe later</button>
+      <button class="tut-btn-yes" onclick="tutStart()">Show me around</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TUTORIAL OVERLAY ═══════════ -->
+<div id="tut-overlay">
+  <div id="tut-backdrop"></div>
+  <div id="tut-spotlight"></div>
+  <div id="tut-finger">👆</div>
+  <div id="tut-tip" class="hidden">
+    <div id="tut-caret"></div>
+    <div class="tut-step-badge">
+      <div class="tut-step-dot"></div>
+      <span id="tut-badge-text">Step 1</span>
+    </div>
+    <div class="tut-progress-row">
+      <div class="tut-progress-track">
+        <div class="tut-progress-fill" id="tut-fill"></div>
+      </div>
+      <div class="tut-step-count" id="tut-count">1 / 10</div>
+    </div>
+    <div class="tut-tip-title" id="tut-title"></div>
+    <div class="tut-tip-body" id="tut-body"></div>
+    <div class="tut-nav-row">
+      <button class="tut-skip" onclick="tutEnd()">Skip tour</button>
+      <button class="tut-next" id="tut-next-btn" onclick="tutNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ONBOARDING OVERLAY ═══════════ -->
+<div id="onboarding">
+  <canvas id="ob-canvas"></canvas>
+  <div id="ob-overlay"></div>
+
+  <!-- Screen 1: Splash -->
+  <div class="ob-screen active" id="ob-s1">
+    <div class="ob-welcome" id="ob-welcome">Welcome to</div>
+    <div class="ob-logo" id="ob-logo">myDecidr</div>
+  </div>
+
+  <!-- Screen 2: About -->
+  <div class="ob-screen" id="ob-s2">
+    <div class="ob-tagline">
+      Decide with<br>intention.<br><em>Learn from the past.</em>
+    </div>
+    <div class="ob-body">
+      Record the reasoning behind your decisions — then come back to see how they played out. Over time, you'll understand yourself better.
+    </div>
+  </div>
+
+  <!-- Screen 3: Theme picker -->
+  <div class="ob-screen" id="ob-s3">
+    <div class="ob-theme-header">
+      <div class="ob-theme-title">Make it<br><em>yours</em></div>
+      <div class="ob-theme-sub">Pick a theme. You can change it anytime.</div>
+    </div>
+
+    <div id="ob-tab-wrap">
+      <div id="ob-tab-track">
+        <div id="ob-tab-ind"></div>
+        <button class="ob-tab-btn active" id="ob-ttab-orb" onclick="obSwitchTab('orb',this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="4" fill="currentColor" opacity=".35"/>
+          </svg>
+          Orbs
+        </button>
+        <button class="ob-tab-btn" id="ob-ttab-grad" onclick="obSwitchTab('grad',this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <defs><linearGradient id="obgi" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="currentColor" stop-opacity=".9"/><stop offset="100%" stop-color="currentColor" stop-opacity=".15"/></linearGradient></defs>
+            <rect x="4" y="4" width="16" height="16" rx="5" fill="url(#obgi)" stroke="currentColor"/>
+          </svg>
+          Gradients
+        </button>
+        <button class="ob-tab-btn" id="ob-ttab-mono" onclick="obSwitchTab('mono',this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="3" y1="8"  x2="21" y2="8"/>
+            <line x1="3" y1="14" x2="14" y2="14"/>
+            <circle cx="19" cy="14" r="2.5" fill="currentColor" opacity=".5"/>
+          </svg>
+          Mono
+        </button>
+      </div>
+    </div>
+
+    <div id="ob-panels">
+      <div class="ob-panel active" id="ob-panel-orb">
+        <div class="theme-grid-color" id="ob-color-grid"></div>
+      </div>
+      <div class="ob-panel" id="ob-panel-grad">
+        <div class="theme-grid-grad" id="ob-grad-grid"></div>
+      </div>
+      <div class="ob-panel" id="ob-panel-mono">
+        <div class="theme-grid-mono" id="ob-mono-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 4: Great choice -->
+  <div class="ob-screen" id="ob-s4">
+    <div class="ob-check-ring">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><polyline points="4,12 10,18 20,6"/></svg>
+    </div>
+    <div class="ob-great-title">Great<br><em>choice.</em></div>
+    <div class="ob-great-theme" id="ob-chosen-name"></div>
+  </div>
+
+  <!-- Shared continue button (one per screen via JS) -->
+  <button class="ob-btn muted" id="ob-btn" onclick="obNext()">Continue</button>
+
+  <!-- Progress dots -->
+  <div class="ob-dots">
+    <div class="ob-dot on" id="ob-d0"></div>
+    <div class="ob-dot"    id="ob-d1"></div>
+    <div class="ob-dot"    id="ob-d2"></div>
+    <div class="ob-dot"    id="ob-d3"></div>
+  </div>
+</div>
+
+<!-- Launch flash overlay -->
+<div id="ob-flash"></div>
+
 
 <script>
 const MONO_THEMES=[
@@ -836,12 +1331,634 @@ function saveReview(){const rating=document.getElementById('r-rating').value,out
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>')}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 
+
+// ═══════════════════════════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════════════════════════
+const SETUP_KEY = 'decidr_setup_done';
+let obStep = 0;         // 0=splash 1=about 2=theme 3=great
+let obSelectedTheme = null;
+let obCanvasRaf = null;
+let obTabActive = 'orb';
+
+// Cycling gradient blobs for the onboarding canvas
+const OB_PALETTES = [
+  ['#0ea5e9','#06b6d4','#34d399'],   // sky → cyan → mint
+  ['#3b82f6','#0891b2','#10b981'],   // blue → teal → emerald
+  ['#0284c7','#0d9488','#4ade80'],   // ocean → teal → green
+  ['#6366f1','#0ea5e9','#06b6d4'],   // indigo → sky → cyan
+  ['#14b8a6','#3b82f6','#818cf8'],   // teal → blue → soft indigo
+];
+let obPaletteIdx = 0;
+let obBlobsA = [], obBlobsB = [];
+let obBlendT = 0, obBlending = false;
+
+function hexToRgb(hex) {
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+function makeObBlobs(palette, canvas) {
+  return palette.map((hex,i) => {
+    const c = hexToRgb(hex);
+    return {x:canvas.width*(0.1+i*0.4), y:canvas.height*(0.1+i*0.35),
+            r:canvas.width*.55, vx:(Math.random()-.5)*.5, vy:(Math.random()-.5)*.5,
+            cr:c.r, cg:c.g, cb:c.b};
+  });
+}
+function lerpBlob(a,b,t) {
+  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, r:a.r,
+          vx:a.vx, vy:a.vy,
+          cr:Math.round(a.cr+(b.cr-a.cr)*t),
+          cg:Math.round(a.cg+(b.cg-a.cg)*t),
+          cb:Math.round(a.cb+(b.cb-a.cb)*t)};
+}
+
+function startObCanvas() {
+  const canvas = document.getElementById('ob-canvas');
+  const ctx = canvas.getContext('2d');
+  const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+  resize(); window.addEventListener('resize', resize);
+
+  obBlobsA = makeObBlobs(OB_PALETTES[0], canvas);
+  obBlobsB = makeObBlobs(OB_PALETTES[1], canvas);
+
+  // Cycle palette every 3.5s
+  setInterval(() => {
+    obPaletteIdx = (obPaletteIdx + 1) % OB_PALETTES.length;
+    obBlobsA = obBlobsB.map(b=>({...b}));
+    obBlobsB = makeObBlobs(OB_PALETTES[obPaletteIdx], canvas);
+    obBlendT = 0; obBlending = true;
+  }, 3500);
+
+  function frame() {
+    canvas.width = canvas.width; // clear
+
+    // Background deep dark
+    ctx.fillStyle = '#0a0820';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Move blobs A
+    obBlobsA.forEach(b => {
+      b.x += b.vx; b.y += b.vy;
+      if(b.x<-b.r||b.x>canvas.width+b.r) b.vx*=-1;
+      if(b.y<-b.r||b.y>canvas.height+b.r) b.vy*=-1;
+    });
+
+    // Blend
+    if(obBlending) {
+      obBlendT = Math.min(obBlendT + 0.008, 1);
+      if(obBlendT >= 1) obBlending = false;
+    }
+
+    const blobs = obBlendT > 0
+      ? obBlobsA.map((a,i) => lerpBlob(a, obBlobsB[i]||a, obBlendT))
+      : obBlobsA;
+
+    blobs.forEach(b => {
+      const g = ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
+      g.addColorStop(0, `rgba(${b.cr},${b.cg},${b.cb},.55)`);
+      g.addColorStop(1, `rgba(${b.cr},${b.cg},${b.cb},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    });
+
+    obCanvasRaf = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function stopObCanvas() {
+  if(obCanvasRaf) { cancelAnimationFrame(obCanvasRaf); obCanvasRaf = null; }
+}
+
+// ── Onboarding step management ──────────────────────────────
+const OB_SCREENS = ['ob-s1','ob-s2','ob-s3','ob-s4'];
+
+function obGoTo(step, dir='forward') {
+  const prev = document.getElementById(OB_SCREENS[obStep]);
+  const next = document.getElementById(OB_SCREENS[step]);
+  if(prev) { prev.classList.remove('active'); prev.classList.add('exit-up'); setTimeout(()=>prev.classList.remove('exit-up'),600); }
+  obStep = step;
+  if(next) { next.classList.add('active'); }
+
+  // Update dots
+  [0,1,2,3].forEach(i => {
+    const d = document.getElementById('ob-d'+i);
+    d.classList.toggle('on', i===step);
+  });
+
+  // Update button
+  const btn = document.getElementById('ob-btn');
+  if(step === 0) {
+    btn.textContent = 'Get started';
+    btn.classList.add('muted'); // shows with delay
+    setTimeout(()=>btn.classList.add('show'), 100);
+    setTimeout(()=>btn.classList.remove('muted'), 1400);
+  } else if(step === 1) {
+    btn.textContent = 'Continue';
+    btn.classList.remove('muted');
+  } else if(step === 2) {
+    btn.textContent = 'Continue';
+    btn.classList.toggle('muted', !obSelectedTheme);
+  } else if(step === 3) {
+    btn.textContent = "Let's go →";
+    btn.classList.remove('muted');
+  }
+}
+
+function obNext() {
+  if(obStep === 0) { obGoTo(1); }
+  else if(obStep === 1) { obGoTo(2); requestAnimationFrame(obUpdateTabInd); }
+  else if(obStep === 2) {
+    if(!obSelectedTheme) return;
+    // Apply chosen theme
+    applyTheme(obSelectedTheme, false);
+    // Show chosen name on screen 4
+    const t = ALL_THEMES.find(x=>x.id===obSelectedTheme);
+    document.getElementById('ob-chosen-name').textContent = (t ? t.name : '') + ' theme selected';
+    obGoTo(3);
+  } else if(obStep === 3) {
+    obFinish();
+  }
+}
+
+function obFinish() {
+  // Flash white then reveal app
+  const flash = document.getElementById('ob-flash');
+  flash.style.background = 'var(--bg)';
+  flash.style.opacity = '0';
+  flash.style.transition = 'opacity 400ms ease';
+  flash.style.pointerEvents = 'all';
+  // Force reflow then fade in flash
+  void flash.offsetWidth;
+  flash.style.opacity = '1';
+
+  setTimeout(() => {
+    // Hide onboarding
+    stopObCanvas();
+    document.getElementById('onboarding').classList.add('gone');
+    // Mark setup done
+    localStorage.setItem(SETUP_KEY, '1');
+    // Fade flash out to reveal app
+    flash.style.transition = 'opacity 600ms ease';
+    flash.style.opacity = '0';
+    setTimeout(()=>{ flash.style.pointerEvents='none'; }, 650);
+    // Ensure app is ready
+    renderList();
+    requestAnimationFrame(updateNavIndicator);
+    requestAnimationFrame(updateThemeTabIndicator);
+    // Show tutorial prompt after app reveals
+    setTimeout(() => showTutPrompt(), 1100);
+  }, 420);
+}
+
+// ── Splash screen choreography ──────────────────────────────
+function runSplash() {
+  const logo = document.getElementById('ob-logo');
+  const welcome = document.getElementById('ob-welcome');
+  const btn = document.getElementById('ob-btn');
+
+  // Logo pops in
+  setTimeout(()=>logo.classList.add('show'), 200);
+  // Welcome fades in above, logo nudges down
+  setTimeout(()=>{
+    welcome.classList.add('show');
+    logo.classList.add('nudge');
+  }, 1100);
+  // Button slides up
+  setTimeout(()=>btn.classList.add('show'), 1600);
+  setTimeout(()=>btn.classList.remove('muted'), 1650);
+}
+
+// ── Onboarding theme tab ─────────────────────────────────────
+function obSwitchTab(tab, btn) {
+  obTabActive = tab;
+  document.querySelectorAll('.ob-tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ob-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('ob-panel-'+tab).classList.add('active');
+  requestAnimationFrame(obUpdateTabInd);
+}
+
+function obUpdateTabInd() {
+  const active = document.querySelector('.ob-tab-btn.active');
+  const ind = document.getElementById('ob-tab-ind');
+  const track = document.getElementById('ob-tab-track');
+  if(!active||!ind||!track) return;
+  const tR=track.getBoundingClientRect(), bR=active.getBoundingClientRect();
+  ind.style.left = (bR.left-tR.left)+'px';
+  ind.style.width = bR.width+'px';
+}
+
+function obPickTheme(id) {
+  obSelectedTheme = id;
+  // Visual feedback in all ob grids
+  document.querySelectorAll('#ob-s3 .theme-card, #ob-s3 .theme-card-grad, #ob-s3 .theme-card-mono')
+    .forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('ob-tc-'+id);
+  if(card) card.classList.add('selected');
+  // Unlock continue button
+  const btn = document.getElementById('ob-btn');
+  btn.classList.remove('muted');
+  // Live-preview the theme on the background blobs accent
+  applyTheme(id, false);
+}
+
+function renderObGrids() {
+  // Color
+  document.getElementById('ob-color-grid').innerHTML = COLOR_THEMES.map(t => {
+    const[r,g,b]=t.c2,sel=t.id===obSelectedTheme;
+    return`<div class="theme-card${sel?' selected':''}" id="ob-tc-${t.id}" onclick="obPickTheme('${t.id}')">
+      <div class="theme-orb" style="background:radial-gradient(ellipse at 38% 32%,rgba(${t.c1[0]},${t.c1[1]},${t.c1[2]},.95) 0%,rgba(${r},${g},${b},.65) 50%,rgba(${r},${g},${b},.2) 100%);${sel?`box-shadow:0 0 20px 5px rgba(${r},${g},${b},.55)`:''}"></div>
+      <div class="theme-name">${t.name}</div>
+      <div class="theme-tick"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#0a0a0f" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+    </div>`;
+  }).join('');
+
+  // Grad
+  document.getElementById('ob-grad-grid').innerHTML = GRAD_THEMES.map(t => {
+    const sel=t.id===obSelectedTheme;
+    return`<div class="theme-card-grad${sel?' selected':''}" id="ob-tc-${t.id}" onclick="obPickTheme('${t.id}')">
+      <div class="grad-swatch" style="background:${t.grad}"></div>
+      <div class="grad-theme-name">${t.name}</div>
+      <div class="theme-tick-grad"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#0a0a0f" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+    </div>`;
+  }).join('');
+
+  // Mono
+  document.getElementById('ob-mono-grid').innerHTML = MONO_THEMES.map(t => {
+    const sel=t.id===obSelectedTheme,tickColor=(t.id==='ash'||t.id==='bone')?'#111':'#fff',tickBg=(t.id==='ash'||t.id==='bone')?'rgba(0,0,0,.8)':'rgba(255,255,255,.9)';
+    return`<div class="theme-card-mono${sel?' selected':''}" id="ob-tc-${t.id}" style="background:${t.bg};border-color:${sel?t.accent:'transparent'}" onclick="obPickTheme('${t.id}')">
+      <div class="mono-preview-swatch" style="background:linear-gradient(135deg,${t.surface} 0%,${t.bg} 100%)"></div>
+      <div style="color:${t.accent};font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px">${t.name}</div>
+      <div style="color:${t.accent};font-family:'DM Mono',monospace;font-size:10px;opacity:.5">${t.desc}</div>
+      <div class="theme-tick-mono" style="background:${tickBg}"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="${tickColor}" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+    </div>`;
+  }).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// TUTORIAL ENGINE
+// ═══════════════════════════════════════════════════════════
+const TUT_KEY = 'decidr_tut_done';
+let tutStep = 0;
+let tutActive = false;
+let tutResizeObs = null;
+
+// ── Tutorial steps definition ────────────────────────────────
+// Each step: { nav, target, title, body, caretDir, fingerPos, action }
+// nav: which view to be on
+// target: CSS selector for spotlight element (null = full-screen intro)
+// caretDir: 'up'|'down'|'none'
+// fingerPos: 'on-target'|null
+// action: optional fn to call before showing step
+const TUT_STEPS = [
+  {
+    nav: 'list',
+    target: null,
+    title: 'Your decision journal',
+    body: 'This is the Journal — where all your decisions live. Every choice you record appears here as a card.',
+    caretDir: 'none',
+    wide: true,
+  },
+  {
+    nav: 'list',
+    target: '.header-title',
+    title: 'Your decisions list',
+    body: 'Decisions are sorted newest first. You\'ll see the category, title, confidence level, and any pending reviews at a glance.',
+    caretDir: 'up',
+    fingerPos: null,
+  },
+  {
+    nav: 'list',
+    target: '.filter-row',
+    title: 'Filter by category',
+    body: 'Tap any category pill to filter your decisions — Career, Finance, Health, and more. Tap "All" to see everything.',
+    caretDir: 'up',
+    fingerPos: 'center',
+  },
+  {
+    nav: 'list',
+    target: '#fab-btn',
+    title: 'Record a decision',
+    body: 'Tap this + button to start a new entry. You\'ll walk through what you decided, your reasoning, confidence level, and what you expect to happen.',
+    caretDir: 'down',
+    fingerPos: 'on-target',
+  },
+  {
+    nav: 'insights',
+    target: null,
+    title: 'Patterns tab',
+    body: 'Switch to the Patterns tab to see insights about your decision-making over time.',
+    caretDir: 'none',
+    wide: true,
+    action: () => navTo('insights'),
+  },
+  {
+    nav: 'insights',
+    target: '.insight-row',
+    title: 'Your stats at a glance',
+    body: 'See how many decisions you\'ve made, how many you\'ve reviewed, how many reviews are due, and your average outcome rating.',
+    caretDir: 'up',
+  },
+  {
+    nav: 'insights',
+    target: '#nav-insights',
+    title: 'Patterns tab',
+    body: 'You can always get back here from the Patterns button in the nav bar below.',
+    caretDir: 'down',
+    fingerPos: 'on-target',
+  },
+  {
+    nav: 'customize',
+    target: null,
+    title: 'Theme section',
+    body: 'The Theme tab lets you change the look of the entire app — with three completely different visual styles to explore.',
+    caretDir: 'none',
+    wide: true,
+    action: () => { navTo('customize'); },
+  },
+  {
+    nav: 'customize',
+    target: '#theme-tab-track',
+    title: 'Three theme categories',
+    body: 'Switch between Orbs (your current style), Gradients (vibrant animated backgrounds), and Mono (editorial print style). Each feels like a completely different app.',
+    caretDir: 'up',
+    fingerPos: 'center',
+  },
+  {
+    nav: 'customize',
+    target: '#nav-customize',
+    title: 'Always accessible',
+    body: 'The Theme button in the nav bar is always one tap away whenever you want to switch things up.',
+    caretDir: 'down',
+    fingerPos: 'on-target',
+  },
+  {
+    nav: 'list',
+    target: null,
+    title: "You're all set! 🎉",
+    body: 'That\'s the full tour. Start by recording your first decision — the more you log, the more you\'ll learn about your own thinking.',
+    caretDir: 'none',
+    wide: true,
+    isLast: true,
+    action: () => navTo('list'),
+  },
+];
+
+// ── Show the prompt after onboarding completes ───────────────
+function showTutPrompt() {
+  if(localStorage.getItem(TUT_KEY)) return;
+  const wrap = document.getElementById('tut-prompt-wrap');
+  setTimeout(() => wrap.classList.add('show'), 600);
+}
+
+function tutDecline() {
+  const wrap = document.getElementById('tut-prompt-wrap');
+  wrap.classList.remove('show');
+  setTimeout(() => wrap.style.display='none', 500);
+  localStorage.setItem(TUT_KEY, 'skipped');
+}
+
+function tutStart() {
+  // Hide prompt
+  const wrap = document.getElementById('tut-prompt-wrap');
+  wrap.classList.remove('show');
+  setTimeout(() => wrap.style.display='none', 400);
+
+  // Start tutorial after short delay
+  setTimeout(() => {
+    tutStep = 0;
+    tutActive = true;
+    const overlay = document.getElementById('tut-overlay');
+    overlay.classList.add('active');
+    tutShowStep(tutStep);
+  }, 500);
+}
+
+function tutNext() {
+  if(tutStep >= TUT_STEPS.length - 1) { tutEnd(); return; }
+  tutStep++;
+
+  const step = TUT_STEPS[tutStep];
+  // If step requires navigation, do it then show after delay
+  if(step.action) {
+    // Hide tip briefly during nav
+    document.getElementById('tut-tip').classList.add('hidden');
+    step.action();
+    setTimeout(() => tutShowStep(tutStep), 480);
+  } else {
+    tutShowStep(tutStep);
+  }
+}
+
+function tutEnd() {
+  tutActive = false;
+  const overlay = document.getElementById('tut-overlay');
+
+  // Fade tip out first
+  document.getElementById('tut-tip').classList.add('hidden');
+  document.getElementById('tut-finger').classList.remove('show');
+
+  // Shrink spotlight to nothing
+  const spot = document.getElementById('tut-spotlight');
+  spot.style.opacity = '0';
+
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    spot.style.opacity = '';
+    localStorage.setItem(TUT_KEY, 'done');
+  }, 400);
+}
+
+// ── Core step renderer ───────────────────────────────────────
+function tutShowStep(idx) {
+  const step = TUT_STEPS[idx];
+  const total = TUT_STEPS.length;
+  const spot = document.getElementById('tut-spotlight');
+  const tip  = document.getElementById('tut-tip');
+  const finger = document.getElementById('tut-finger');
+
+  // Update text
+  document.getElementById('tut-title').textContent = step.title;
+  document.getElementById('tut-body').textContent  = step.body;
+  document.getElementById('tut-badge-text').textContent = `Step ${idx + 1}`;
+  document.getElementById('tut-count').textContent = `${idx + 1} / ${total}`;
+  document.getElementById('tut-fill').style.width  = ((idx + 1) / total * 100) + '%';
+
+  const nextBtn = document.getElementById('tut-next-btn');
+  if(step.isLast) {
+    nextBtn.textContent = "Done ✓";
+    nextBtn.classList.add('finish');
+  } else {
+    nextBtn.textContent = "Next →";
+    nextBtn.classList.remove('finish');
+  }
+
+  // Position spotlight
+  if(!step.target || step.wide) {
+    // Full-screen or wide — minimal spotlight (large center rect)
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if(step.wide) {
+      const pad = 20;
+      tutPositionSpot(pad, 120, vw - pad*2, vh - 240, 22);
+    } else {
+      // No spotlight — dim whole screen
+      spot.style.opacity = '0';
+    }
+    finger.classList.remove('show');
+  } else {
+    spot.style.opacity = '1';
+    const el = document.querySelector(step.target);
+    if(el) {
+      const r = el.getBoundingClientRect();
+      const pad = 10;
+      tutPositionSpot(
+        r.left - pad, r.top - pad,
+        r.width + pad*2, r.height + pad*2,
+        14
+      );
+
+      // Finger pointer
+      if(step.fingerPos === 'on-target') {
+        finger.style.left = (r.left + r.width/2) + 'px';
+        finger.style.top  = (r.top - 18) + 'px';
+        setTimeout(()=>finger.classList.add('show'), 300);
+      } else if(step.fingerPos === 'center') {
+        finger.style.left = (r.left + r.width/2) + 'px';
+        finger.style.top  = (r.top + r.height/2) + 'px';
+        setTimeout(()=>finger.classList.add('show'), 300);
+      } else {
+        finger.classList.remove('show');
+      }
+    }
+  }
+
+  // Position tooltip above or below spotlight
+  tutPositionTip(step);
+
+  // Reveal tip
+  setTimeout(() => {
+    tip.classList.remove('hidden');
+  }, 150);
+}
+
+function tutPositionSpot(x, y, w, h, radius) {
+  const spot = document.getElementById('tut-spotlight');
+  spot.style.left   = Math.max(0, x) + 'px';
+  spot.style.top    = Math.max(0, y) + 'px';
+  spot.style.width  = w + 'px';
+  spot.style.height = h + 'px';
+  spot.style.borderRadius = radius + 'px';
+  spot.style.opacity = '1';
+}
+
+function tutPositionTip(step) {
+  const tip   = document.getElementById('tut-tip');
+  const caret = document.getElementById('tut-caret');
+  const vw = window.innerWidth, vh = window.innerHeight;
+
+  // Reset caret classes
+  caret.className = '';
+  caret.style.top = '';
+  caret.style.bottom = '';
+
+  let tipTop = null, tipBottom = null;
+
+  if(!step.target || step.wide) {
+    // Center of screen, lower half
+    tip.style.position = 'absolute';
+    tip.style.top = '';
+    tip.style.bottom = (80 + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')||'0')) + 'px';
+    tip.style.left = '50%';
+    tip.style.transform = 'translateX(-50%)';
+    return;
+  }
+
+  const el = document.querySelector(step.target);
+  if(!el) return;
+
+  const r = el.getBoundingClientRect();
+  const tipH = 200; // estimated tip height
+  const pad = 16;
+  const spotBottom = r.bottom + 10;
+  const spotTop    = r.top - 10;
+
+  tip.style.position = 'absolute';
+  tip.style.left = '50%';
+  tip.style.transform = 'translateX(-50%)';
+
+  if(step.caretDir === 'down' || spotBottom > vh * 0.55) {
+    // Tip goes ABOVE spotlight
+    tip.style.top = '';
+    tip.style.bottom = (vh - spotTop + pad) + 'px';
+    caret.className = 'caret-down';
+    caret.style.bottom = '-10px';
+  } else {
+    // Tip goes BELOW spotlight
+    tip.style.bottom = '';
+    tip.style.top = (spotBottom + pad) + 'px';
+    caret.className = 'caret-up';
+    caret.style.top = '-10px';
+  }
+}
+
+// Trigger re-position on resize
+window.addEventListener('resize', () => {
+  if(tutActive && tutStep < TUT_STEPS.length) {
+    tutShowStep(tutStep);
+  }
+});
+
+// ── Boot ─────────────────────────────────────────────────────
+function bootApp() {
+  const done = localStorage.getItem(SETUP_KEY);
+  if(done) {
+    // Skip onboarding
+    document.getElementById('onboarding').classList.add('gone');
+    // Show tutorial prompt if they haven't seen it yet'    setTimeout(() => showTutPrompt(), 900);
+    return;
+  }
+  // Run onboarding
+  startObCanvas();
+  renderObGrids();
+  // Initial btn state
+  const btn = document.getElementById('ob-btn');
+  btn.classList.add('muted');
+  requestAnimationFrame(obUpdateTabInd);
+  runSplash();
+}
+
 load();
 applyTheme(currentThemeId,false);
 renderList();
+bootApp();
 requestAnimationFrame(updateNavIndicator);
 requestAnimationFrame(updateThemeTabIndicator);
 window.addEventListener('resize',()=>{updateNavIndicator();updateThemeTabIndicator()});
+
+// ── Capacitor System Bars (Android 15+) ──
+function initCapacitor(){
+  if(!window.Capacitor)return;
+  const isDark=!document.body.classList.contains('t-ash')&&!document.body.classList.contains('t-bone');
+  const bgColor=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#0a0a0f';
+  if(Capacitor.Plugins.StatusBar){
+    Capacitor.Plugins.StatusBar.setStyle({style:isDark?'DARK':'LIGHT'});
+    Capacitor.Plugins.StatusBar.setBackgroundColor({color:bgColor});
+  }
+  if(Capacitor.Plugins.SafeArea){
+    Capacitor.Plugins.SafeArea.enable({config:{
+      customColorsForSystemBars:true,
+      statusBarColor:bgColor,
+      statusBarContent:isDark?'light':'dark',
+      navigationBarColor:bgColor,
+      navigationBarContent:isDark?'light':'dark',
+    }});
+  }
+}
+document.addEventListener('DOMContentLoaded',initCapacitor);
+document.addEventListener('deviceready',initCapacitor);
 </script>
 </body>
 </html>
