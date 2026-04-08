@@ -5,7 +5,9 @@
 <br/>
 <br/>
 
-[![Open App](https://img.shields.io/badge/Open%20Web%20App-%E2%86%92-6366f1?style=for-the-badge&labelColor=0a0a0f)](https://my-decidr.vercel.app/)
+[![Open Web App](https://img.shields.io/badge/Open%20Web%20App-%E2%86%92-6366f1?style=for-the-badge&labelColor=0a0a0f)](https://my-decidr-app-bmck.vercel.app/)
+&nbsp;
+[![Download Android App (Coming Soon)](https://img.shields.io/badge/Download-App%20APK-0A0F1E?style=for-the-badge&logo=android&logoColor=green)](https://github.com/ars218/myDecidr)
 &nbsp;
 [![Status](https://img.shields.io/badge/Status-Active-22c55e?style=for-the-badge&labelColor=0a0a0f)](#)
 &nbsp;
@@ -31,7 +33,19 @@ It's a personal decision journal — log what you decided, why you decided it, a
 
 No accounts. No cloud. No tracking. Everything lives on your device.
 ---
+## 📱 Screenshots
 
+<p align="center">
+  <img src="screenshots/setup.png" width="45%"/>
+  <img src="screenshots/home.png" width="45%"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/patterns.png" width="45%"/>
+  <img src="screenshots/themes.png" width="45%"/>
+</p>
+
+---
 > [!WARNING]
 > myDecidr uses localstorage and your saved Decisions remain on your device/web browser.
 
