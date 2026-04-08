@@ -2,12 +2,24 @@
 
 All notable changes to Decidr are documented here.
 ---
-## [1.2.1] — 1st Update
+## [1.3.1] — 5th Update
+
+### Added
+- Bug fixes.
+
+---
+## [1.3.0] — 4th Update
+
+### Added
+- Added Initial user setup.
+- Added tutorial for new users.
+---
+## [1.2.1] — 3rd Update
 
 ### Added
 - Added top pill shape bar at top of themes section for easy access.
 ---
-## [1.2.0] — 1st Update
+## [1.2.0] — 2nd Update
 
 ### Added
 - Added new Monochrome and Gradient themes.
